@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <meta name="theme-color" content="#0d0d0d"/>
+  <title>VR Spoedkoerier</title>
+  <link rel="manifest" href="manifest.webmanifest"/>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+<div id="app">
+  <section id="welcome" class="screen welcome active">
+    <div class="brandmark"><span class="vr">VR</span><span>SPOEDKOERIER</span></div>
+    <div class="welcome-copy">
+      <h1>Snel. Betrouwbaar.<br><em>Altijd onderweg.</em></h1>
+      <p>Spoedlevering door heel Nederland & België.<br>24/7 voor bedrijven & particulieren.</p>
+    </div>
+    <button class="primary wide" data-go="home">Aan de slag</button>
+  </section>
+
+  <main id="shell" class="hidden">
+    <header class="topbar">
+      <div><small id="greeting">Goedemorgen,</small><strong>VR Klant</strong></div>
+      <button class="icon-btn" data-go="settings" aria-label="Instellingen">☰</button>
+    </header>
+
+    <section id="home" class="page active">
+      <div class="hero-card">
+        <small>Nieuwe zending</small>
+        <h2>Waar mogen we<br>het ophalen?</h2>
+        <button class="plus" data-go="booking">+</button>
+      </div>
+
+      <div class="quick-grid">
+        <button data-go="booking"><b>⚡</b><span>Direct<br>verzenden</span></button>
+        <button data-go="planned"><b>◷</b><span>Plan een<br>zending</span></button>
+        <button data-go="rates"><b>€</b><span>Tarieven<br>bekijken</span></button>
+        <button data-go="shipments"><b>□</b><span>Mijn<br>zendingen</span></button>
+      </div>
+
+      <div class="section-head"><h3>Recente zendingen</h3><button data-go="shipments">Bekijk alles</button></div>
+      <div id="recentList" class="list"></div>
+    </section>
+
+    <section id="booking" class="page">
+      <button class="back" data-go="home">←</button>
+      <h2>Directe koerier</h2>
+      <p class="sub">Vandaag opgehaald, rechtstreeks geleverd.</p>
+      <form id="bookingForm">
+        <label>Ophaaladres<input id="pickup" required placeholder="Straat, plaats"/></label>
+        <label>Afleveradres<input id="dropoff" required placeholder="Straat, plaats"/></label>
+        <div class="two">
+          <label>Afstand (km)<input id="km" type="number" min="1" step="1" required placeholder="Bijv. 73"/></label>
+          <label>Gewicht (kg)<input id="weight" type="number" min="0" max="200" step="0.1" placeholder="Bijv. 8"/></label>
+        </div>
+        <label>Zending
+          <select id="parcelType">
+            <option>Documenten</option><option>Pakket</option><option>Auto-/technisch onderdeel</option>
+            <option>Medische goederen (niet-ADR)</option><option>Overig</option>
+          </select>
+        </label>
+        <label class="check"><input id="afterHours" type="checkbox"/> Nacht/weekendtarief (+50%)</label>
+        <div class="quote">
+          <div><small>Indicatieve ritprijs</small><strong id="price">€ 15,00</strong></div>
+          <small>excl. btw</small>
+        </div>
+        <button class="primary wide" type="submit">Zending aanvragen</button>
+      </form>
+    </section>
+
+    <section id="planned" class="page">
+      <button class="back" data-go="home">←</button>
+      <h2>Geplande koerier</h2>
+      <p class="sub">Kies zelf datum en tijd.</p>
+      <form id="plannedForm">
+        <label>Ophaaladres<input id="pPickup" required placeholder="Straat, plaats"/></label>
+        <label>Afleveradres<input id="pDropoff" required placeholder="Straat, plaats"/></label>
+        <div class="two">
+          <label>Datum<input id="pDate" type="date" required/></label>
+          <label>Tijd<input id="pTime" type="time" required/></label>
+        </div>
+        <label>Afstand (km)<input id="pKm" type="number" min="1" step="1" required placeholder="Bijv. 40"/></label>
+        <div class="quote"><div><small>Indicatieve ritprijs</small><strong id="pPrice">€ 15,00</strong></div><small>excl. btw</small></div>
+        <button class="primary wide" type="submit">Zending plannen</button>
+      </form>
+    </section>
+
+    <section id="rates" class="page">
+      <button class="back" data-go="home">←</button>
+      <h2>Tarieven</h2>
+      <div class="service-card">
+        <div class="badge">⚡</div><h3>Direct A → B</h3>
+        <p>Binnen regio Haarlem zo snel mogelijk ophalen. Geen overslag, geen tussenstops.</p>
+        <ul><li>Starttarief €15</li><li>€1,30 per kilometer</li><li>Eerste 10 minuten wachten gratis</li><li>Daarna €1/minuut</li><li>Nacht/weekend +50%</li></ul>
+      </div>
+      <button class="primary wide" data-go="booking">Direct boeken</button>
+    </section>
+
+    <section id="shipments" class="page">
+      <button class="back" data-go="home">←</button>
+      <h2>Mijn zendingen</h2>
+      <div id="shipmentList" class="list"></div>
+    </section>
+
+    <section id="settings" class="page">
+      <button class="back" data-go="home">←</button>
+      <h2>Meer</h2>
+      <div class="service-card">
+        <h3>VR Spoedkoerier</h3>
+        <p>Direct A→B spoedtransport, 24/7 beschikbaar.</p>
+        <a class="primary wide link" href="tel:+31641137207">Bel 06 41137207</a>
+        <a class="outline wide link" href="https://wa.me/31641137207">WhatsApp</a>
+      </div>
+    </section>
+
+    <nav class="bottom">
+      <button data-go="home">⌂<span>Home</span></button>
+      <button data-go="shipments">□<span>Zendingen</span></button>
+      <button data-go="booking">＋<span>Boeken</span></button>
+      <button data-go="settings">☰<span>Meer</span></button>
+    </nav>
+  </main>
+</div>
+
+<div id="toast"></div>
+<script src="app.js"></script>
+</body>
+</html>

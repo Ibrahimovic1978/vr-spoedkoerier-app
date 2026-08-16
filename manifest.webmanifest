@@ -1,0 +1,17 @@
+{
+  "name": "VR Spoedkoerier",
+  "short_name": "VR Spoed",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#101010",
+  "theme_color": "#101010",
+  "description": "Direct A→B spoedtransport door Nederland en België.",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
