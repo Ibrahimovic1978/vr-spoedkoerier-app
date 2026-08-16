@@ -4,4 +4,3 @@ window.VR_CONFIG = {
   SUPABASE_URL: "",
   SUPABASE_ANON_KEY: "",
   GOOGLE_MAPS_API_KEY: ""
-};
