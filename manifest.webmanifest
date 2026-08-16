@@ -2,6 +2,7 @@
   "name": "VR Spoedkoerier",
   "short_name": "VR Spoed",
   "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#101010",
   "theme_color": "#101010",

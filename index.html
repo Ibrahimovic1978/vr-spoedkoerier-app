@@ -4,6 +4,7 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
   <meta name="theme-color" content="#0d0d0d"/>
+  <meta name="description" content="VR Spoedkoerier - direct A naar B spoedtransport"/>
   <title>VR Spoedkoerier</title>
   <link rel="manifest" href="manifest.webmanifest"/>
   <link rel="stylesheet" href="styles.css"/>
@@ -22,7 +23,7 @@
   <main id="shell" class="hidden">
     <header class="topbar">
       <div><small id="greeting">Goedemorgen,</small><strong>VR Klant</strong></div>
-      <button class="icon-btn" data-go="settings" aria-label="Instellingen">☰</button>
+      <button class="icon-btn" data-go="settings" aria-label="Meer">☰</button>
     </header>
 
     <section id="home" class="page active">
@@ -48,24 +49,33 @@
       <h2>Directe koerier</h2>
       <p class="sub">Vandaag opgehaald, rechtstreeks geleverd.</p>
       <form id="bookingForm">
-        <label>Ophaaladres<input id="pickup" required placeholder="Straat, plaats"/></label>
-        <label>Afleveradres<input id="dropoff" required placeholder="Straat, plaats"/></label>
-        <div class="two">
-          <label>Afstand (km)<input id="km" type="number" min="1" step="1" required placeholder="Bijv. 73"/></label>
-          <label>Gewicht (kg)<input id="weight" type="number" min="0" max="200" step="0.1" placeholder="Bijv. 8"/></label>
+        <label>Ophaaladres<input id="pickup" autocomplete="street-address" required placeholder="Begin met typen..."/></label>
+        <label>Afleveradres<input id="dropoff" autocomplete="street-address" required placeholder="Begin met typen..."/></label>
+
+        <div id="routeStatus" class="route-status">Vul beide adressen in. De route wordt automatisch berekend.</div>
+        <div id="routeBox" class="route-box hidden">
+          <div><small>Rijafstand</small><strong id="routeKm">–</strong></div>
+          <div><small>Geschatte rijtijd</small><strong id="routeTime">–</strong></div>
         </div>
+
+        <label>Gewicht (kg)<input id="weight" type="number" min="0" max="200" step="0.1" placeholder="Bijv. 8"/></label>
         <label>Zending
           <select id="parcelType">
             <option>Documenten</option><option>Pakket</option><option>Auto-/technisch onderdeel</option>
             <option>Medische goederen (niet-ADR)</option><option>Overig</option>
           </select>
         </label>
+        <div class="two">
+          <label>Naam<input id="customerName" required placeholder="Naam"/></label>
+          <label>Telefoon<input id="customerPhone" type="tel" required placeholder="06..."/></label>
+        </div>
+        <label>E-mail<input id="customerEmail" type="email" required placeholder="naam@bedrijf.nl"/></label>
         <label class="check"><input id="afterHours" type="checkbox"/> Nacht/weekendtarief (+50%)</label>
         <div class="quote">
-          <div><small>Indicatieve ritprijs</small><strong id="price">€ 15,00</strong></div>
+          <div><small>Indicatieve ritprijs</small><strong id="price">Route eerst berekenen</strong></div>
           <small>excl. btw</small>
         </div>
-        <button class="primary wide" type="submit">Zending aanvragen</button>
+        <button id="submitDirect" class="primary wide" type="submit">Zending aanvragen</button>
       </form>
     </section>
 
@@ -74,14 +84,23 @@
       <h2>Geplande koerier</h2>
       <p class="sub">Kies zelf datum en tijd.</p>
       <form id="plannedForm">
-        <label>Ophaaladres<input id="pPickup" required placeholder="Straat, plaats"/></label>
-        <label>Afleveradres<input id="pDropoff" required placeholder="Straat, plaats"/></label>
+        <label>Ophaaladres<input id="pPickup" required placeholder="Begin met typen..."/></label>
+        <label>Afleveradres<input id="pDropoff" required placeholder="Begin met typen..."/></label>
+        <div id="pRouteStatus" class="route-status">Vul beide adressen in. De route wordt automatisch berekend.</div>
+        <div id="pRouteBox" class="route-box hidden">
+          <div><small>Rijafstand</small><strong id="pRouteKm">–</strong></div>
+          <div><small>Geschatte rijtijd</small><strong id="pRouteTime">–</strong></div>
+        </div>
         <div class="two">
           <label>Datum<input id="pDate" type="date" required/></label>
           <label>Tijd<input id="pTime" type="time" required/></label>
         </div>
-        <label>Afstand (km)<input id="pKm" type="number" min="1" step="1" required placeholder="Bijv. 40"/></label>
-        <div class="quote"><div><small>Indicatieve ritprijs</small><strong id="pPrice">€ 15,00</strong></div><small>excl. btw</small></div>
+        <div class="two">
+          <label>Naam<input id="pCustomerName" required placeholder="Naam"/></label>
+          <label>Telefoon<input id="pCustomerPhone" type="tel" required placeholder="06..."/></label>
+        </div>
+        <label>E-mail<input id="pCustomerEmail" type="email" required placeholder="naam@bedrijf.nl"/></label>
+        <div class="quote"><div><small>Indicatieve ritprijs</small><strong id="pPrice">Route eerst berekenen</strong></div><small>excl. btw</small></div>
         <button class="primary wide" type="submit">Zending plannen</button>
       </form>
     </section>
@@ -91,8 +110,8 @@
       <h2>Tarieven</h2>
       <div class="service-card">
         <div class="badge">⚡</div><h3>Direct A → B</h3>
-        <p>Binnen regio Haarlem zo snel mogelijk ophalen. Geen overslag, geen tussenstops.</p>
-        <ul><li>Starttarief €15</li><li>€1,30 per kilometer</li><li>Eerste 10 minuten wachten gratis</li><li>Daarna €1/minuut</li><li>Nacht/weekend +50%</li></ul>
+        <p>Geen overslag en geen onnodige tussenstops.</p>
+        <ul><li>Starttarief €15</li><li>€1,30 per gereden kilometer</li><li>Eerste 10 minuten wachten gratis</li><li>Daarna €1/minuut</li><li>Nacht/weekend +50%</li></ul>
       </div>
       <button class="primary wide" data-go="booking">Direct boeken</button>
     </section>
@@ -100,7 +119,29 @@
     <section id="shipments" class="page">
       <button class="back" data-go="home">←</button>
       <h2>Mijn zendingen</h2>
+      <p class="muted">Op deze telefoon zie je de zendingen die je hier hebt aangevraagd.</p>
       <div id="shipmentList" class="list"></div>
+    </section>
+
+    <section id="admin" class="page">
+      <button class="back" data-go="settings">←</button>
+      <h2>VR Admin</h2>
+      <div id="adminLoggedOut" class="service-card">
+        <h3>Beheerder inloggen</h3>
+        <p>Gebruik het beheerdersaccount uit Supabase.</p>
+        <form id="adminLoginForm">
+          <label>E-mail<input id="adminEmail" type="email" required></label>
+          <label>Wachtwoord<input id="adminPassword" type="password" required></label>
+          <button class="primary wide" type="submit">Inloggen</button>
+        </form>
+      </div>
+      <div id="adminLoggedIn" class="hidden">
+        <div class="admin-head">
+          <span id="adminIdentity"></span>
+          <button id="adminLogout" class="outline small-btn">Uitloggen</button>
+        </div>
+        <div id="adminList" class="list"></div>
+      </div>
     </section>
 
     <section id="settings" class="page">
@@ -111,7 +152,9 @@
         <p>Direct A→B spoedtransport, 24/7 beschikbaar.</p>
         <a class="primary wide link" href="tel:+31641137207">Bel 06 41137207</a>
         <a class="outline wide link" href="https://wa.me/31641137207">WhatsApp</a>
+        <button class="outline wide" data-go="admin">VR Admin</button>
       </div>
+      <div id="backendBadge" class="backend-badge"></div>
     </section>
 
     <nav class="bottom">
@@ -124,6 +167,9 @@
 </div>
 
 <div id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
