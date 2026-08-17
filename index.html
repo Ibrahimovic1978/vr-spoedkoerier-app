@@ -1,175 +1,1138 @@
 <!doctype html>
 <html lang="nl">
+
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <meta name="theme-color" content="#0d0d0d"/>
-  <meta name="description" content="VR Spoedkoerier - direct A naar B spoedtransport"/>
+  <meta charset="utf-8" />
+
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1,viewport-fit=cover"
+  />
+
+  <meta
+    name="theme-color"
+    content="#0d0d0d"
+  />
+
+  <meta
+    name="description"
+    content="VR Spoedkoerier"
+  />
+
   <title>VR Spoedkoerier</title>
-  <link rel="manifest" href="manifest.webmanifest"/>
-  <link rel="stylesheet" href="styles.css"/>
+
+  <link
+    rel="manifest"
+    href="manifest.webmanifest"
+  />
+
+  <link
+    rel="stylesheet"
+    href="styles.css"
+  />
 </head>
+
 <body>
+
 <div id="app">
-  <section id="welcome" class="screen welcome active">
-    <div class="brandmark"><span class="vr">VR</span><span>SPOEDKOERIER</span></div>
-    <div class="welcome-copy">
-      <h1>Snel. Betrouwbaar.<br><em>Altijd onderweg.</em></h1>
-      <p>Spoedlevering door heel Nederland & België.<br>24/7 voor bedrijven & particulieren.</p>
+
+  <!-- WELKOM -->
+
+  <section
+    id="welcome"
+    class="screen welcome active"
+  >
+
+    <div class="brandmark">
+      <span class="vr">VR</span>
     </div>
-    <button class="primary wide" data-go="home">Aan de slag</button>
+
+    <div class="welcome-copy">
+
+      <h1>
+        Snel. Betrouwbaar.<br>
+        <em>Altijd onderweg.</em>
+      </h1>
+
+      <p>
+        Spoedlevering door heel Nederland.
+      </p>
+
+    </div>
+
+    <button
+      class="primary wide"
+      data-go="home"
+    >
+      Start
+    </button>
+
   </section>
 
-  <main id="shell" class="hidden">
+
+  <!-- APP -->
+
+  <main
+    id="shell"
+    class="hidden"
+  >
+
     <header class="topbar">
-      <div><small id="greeting">Goedemorgen,</small><strong>VR Klant</strong></div>
-      <button class="icon-btn" data-go="settings" aria-label="Meer">☰</button>
+
+      <div>
+
+        <small id="greeting">
+          Goedemorgen,
+        </small>
+
+        <h1>VR Klant</h1>
+
+      </div>
+
+      <button
+        class="icon-btn"
+        data-go="settings"
+        type="button"
+      >
+        ☰
+      </button>
+
     </header>
 
-    <section id="home" class="page active">
+
+    <!-- HOME -->
+
+    <section
+      id="home"
+      class="page active"
+    >
+
       <div class="hero-card">
-        <small>Nieuwe zending</small>
-        <h2>Waar mogen we<br>het ophalen?</h2>
-        <button class="plus" data-go="booking">+</button>
+
+        <small>
+          Nieuwe zending
+        </small>
+
+        <h2>
+          Waar mogen we<br>
+          het ophalen?
+        </h2>
+
+        <button
+          class="plus"
+          data-go="booking"
+          type="button"
+        >
+          +
+        </button>
+
       </div>
 
       <div class="quick-grid">
-        <button data-go="booking"><b>⚡</b><span>Direct<br>verzenden</span></button>
-        <button data-go="planned"><b>◷</b><span>Plan een<br>zending</span></button>
-        <button data-go="rates"><b>€</b><span>Tarieven<br>bekijken</span></button>
-        <button data-go="shipments"><b>□</b><span>Mijn<br>zendingen</span></button>
+
+        <button
+          data-go="booking"
+          type="button"
+        >
+          <b>⚡</b>
+          <span>Direct</span>
+        </button>
+
+        <button
+          data-go="planned"
+          type="button"
+        >
+          <b>◉</b>
+          <span>Gepland</span>
+        </button>
+
+        <button
+          data-go="rates"
+          type="button"
+        >
+          <b>€</b>
+          <span>Tarieven</span>
+        </button>
+
+        <button
+          data-go="shipments"
+          type="button"
+        >
+          <b>□</b>
+          <span>Zendingen</span>
+        </button>
+
       </div>
 
-      <div class="section-head"><h3>Recente zendingen</h3><button data-go="shipments">Bekijk alles</button></div>
-      <div id="recentList" class="list"></div>
+      <div class="section-head">
+        <h3>
+          Recente zendingen
+        </h3>
+      </div>
+
+      <div
+        id="recentList"
+        class="list"
+      ></div>
+
     </section>
 
-    <section id="booking" class="page">
-      <button class="back" data-go="home">←</button>
-      <h2>Directe koerier</h2>
-      <p class="sub">Vandaag opgehaald, rechtstreeks geleverd.</p>
+
+    <!-- DIRECT -->
+
+    <section
+      id="booking"
+      class="page"
+    >
+
+      <button
+        class="back"
+        data-go="home"
+        type="button"
+      >
+        ←
+      </button>
+
+      <h2>
+        Directe koerier
+      </h2>
+
+      <p class="sub">
+        Vandaag opgehaald, rechtstreeks geleverd.
+      </p>
+
+
       <form id="bookingForm">
-        <label>Ophaaladres<input id="pickup" autocomplete="street-address" required placeholder="Begin met typen..."/></label>
-        <label>Afleveradres<input id="dropoff" autocomplete="street-address" required placeholder="Begin met typen..."/></label>
 
-        <div id="routeStatus" class="route-status">Vul beide adressen in. De route wordt automatisch berekend.</div>
-        <div id="routeBox" class="route-box hidden">
-          <div><small>Rijafstand</small><strong id="routeKm">–</strong></div>
-          <div><small>Geschatte rijtijd</small><strong id="routeTime">–</strong></div>
-        </div>
 
-        <label>Gewicht (kg)<input id="weight" type="number" min="0" max="200" step="0.1" placeholder="Bijv. 8"/></label>
-        <label>Zending
-          <select id="parcelType">
-            <option>Documenten</option><option>Pakket</option><option>Auto-/technisch onderdeel</option>
-            <option>Medische goederen (niet-ADR)</option><option>Overig</option>
-          </select>
+        <!-- ADRESSEN -->
+
+        <label>
+          Ophaaladres
+
+          <input
+            id="pickup"
+            type="text"
+            autocomplete="street-address"
+            required
+          >
         </label>
-        <div class="two">
-          <label>Naam<input id="customerName" required placeholder="Naam"/></label>
-          <label>Telefoon<input id="customerPhone" type="tel" required placeholder="06..."/></label>
+
+
+        <label>
+          Afleveradres
+
+          <input
+            id="dropoff"
+            type="text"
+            autocomplete="street-address"
+            required
+          >
+        </label>
+
+
+        <!-- ROUTE -->
+
+        <div
+          id="routeStatus"
+          class="route-status"
+        >
+          Vul beide adressen in om de route te berekenen.
         </div>
-        <label>E-mail<input id="customerEmail" type="email" required placeholder="naam@bedrijf.nl"/></label>
-        <label class="check"><input id="afterHours" type="checkbox"/> Nacht/weekendtarief (+50%)</label>
+
+
+        <div
+          id="routeBox"
+          class="route-box hidden"
+        >
+
+          <div>
+
+            <small>
+              Rijafstand
+            </small>
+
+            <b id="routeKm">
+              -
+            </b>
+
+          </div>
+
+
+          <div>
+
+            <small>
+              Geschatte rijtijd
+            </small>
+
+            <b id="routeTime">
+              -
+            </b>
+
+          </div>
+
+        </div>
+
+
+        <!-- GEWICHT -->
+
+        <label>
+          Gewicht (kg)
+
+          <input
+            id="weight"
+            type="number"
+            min="0"
+            step="0.1"
+            inputmode="decimal"
+            placeholder="Bijv. 8"
+            required
+          >
+        </label>
+
+
+        <!-- AFMETINGEN -->
+
+        <div class="section-head">
+          <h3>
+            Afmetingen
+          </h3>
+        </div>
+
+        <p class="muted">
+          Vul de buitenmaten van de zending in centimeters in.
+        </p>
+
+
+        <div class="three">
+
+          <label>
+            Lengte
+
+            <input
+              id="lengthCm"
+              type="number"
+              min="0"
+              step="1"
+              inputmode="numeric"
+              placeholder="cm"
+            >
+          </label>
+
+
+          <label>
+            Breedte
+
+            <input
+              id="widthCm"
+              type="number"
+              min="0"
+              step="1"
+              inputmode="numeric"
+              placeholder="cm"
+            >
+          </label>
+
+
+          <label>
+            Hoogte
+
+            <input
+              id="heightCm"
+              type="number"
+              min="0"
+              step="1"
+              inputmode="numeric"
+              placeholder="cm"
+            >
+          </label>
+
+        </div>
+
+
+        <!-- TYPE ZENDING -->
+
+        <label>
+          Zending
+
+          <select id="parcelType">
+
+            <option value="Documenten">
+              Documenten
+            </option>
+
+            <option value="Pakket">
+              Pakket
+            </option>
+
+            <option value="Medische goederen">
+              Medische goederen
+            </option>
+
+            <option value="Onderdelen">
+              Onderdelen
+            </option>
+
+            <option value="Pallet">
+              Pallet
+            </option>
+
+            <option value="Overige">
+              Overige
+            </option>
+
+          </select>
+
+        </label>
+
+
+        <!-- OMSCHRIJVING OVERIGE -->
+
+        <div
+          id="parcelDescriptionBox"
+          class="hidden"
+        >
+
+          <label>
+            Omschrijf de zending
+
+            <textarea
+              id="parcelDescription"
+              rows="4"
+              placeholder="Bijv. 2 dozen met machineonderdelen"
+            ></textarea>
+
+          </label>
+
+        </div>
+
+
+        <!-- KLANT -->
+
+        <div class="two">
+
+          <label>
+            Naam
+
+            <input
+              id="customerName"
+              type="text"
+              autocomplete="name"
+              required
+            >
+          </label>
+
+
+          <label>
+            Telefoon
+
+            <input
+              id="customerPhone"
+              type="tel"
+              autocomplete="tel"
+              required
+            >
+          </label>
+
+        </div>
+
+
+        <label>
+          E-mail
+
+          <input
+            id="customerEmail"
+            type="email"
+            autocomplete="email"
+            required
+          >
+        </label>
+
+
+        <!-- TOESLAG -->
+
+        <label class="check">
+
+          <input
+            id="afterHours"
+            type="checkbox"
+          >
+
+          Nacht/weekendtarief (+50%)
+
+        </label>
+
+
+        <!-- PRIJS -->
+
         <div class="quote">
-          <div><small>Indicatieve ritprijs</small><strong id="price">Route eerst berekenen</strong></div>
-          <small>excl. btw</small>
+
+          <div>
+
+            <small>
+              Indicatieve ritprijs
+            </small>
+
+            <strong id="price">
+              € 0,00
+            </strong>
+
+          </div>
+
+          <small>
+            excl. btw
+          </small>
+
         </div>
-        <button id="submitDirect" class="primary wide" type="submit">Zending aanvragen</button>
+
+
+        <button
+          id="submitDirect"
+          class="primary wide"
+          type="submit"
+        >
+          Zending aanvragen
+        </button>
+
       </form>
+
     </section>
 
-    <section id="planned" class="page">
-      <button class="back" data-go="home">←</button>
-      <h2>Geplande koerier</h2>
-      <p class="sub">Kies zelf datum en tijd.</p>
+
+    <!-- GEPLAND -->
+
+    <section
+      id="planned"
+      class="page"
+    >
+
+      <button
+        class="back"
+        data-go="home"
+        type="button"
+      >
+        ←
+      </button>
+
+      <h2>
+        Geplande koerier
+      </h2>
+
+      <p class="sub">
+        Kies zelf datum en tijd.
+      </p>
+
+
       <form id="plannedForm">
-        <label>Ophaaladres<input id="pPickup" required placeholder="Begin met typen..."/></label>
-        <label>Afleveradres<input id="pDropoff" required placeholder="Begin met typen..."/></label>
-        <div id="pRouteStatus" class="route-status">Vul beide adressen in. De route wordt automatisch berekend.</div>
-        <div id="pRouteBox" class="route-box hidden">
-          <div><small>Rijafstand</small><strong id="pRouteKm">–</strong></div>
-          <div><small>Geschatte rijtijd</small><strong id="pRouteTime">–</strong></div>
+
+
+        <label>
+          Ophaaladres
+
+          <input
+            id="pPickup"
+            type="text"
+            required
+          >
+        </label>
+
+
+        <label>
+          Afleveradres
+
+          <input
+            id="pDropoff"
+            type="text"
+            required
+          >
+        </label>
+
+
+        <div
+          id="pRouteStatus"
+          class="route-status"
+        >
+          Vul beide adressen in om de route te berekenen.
         </div>
+
+
+        <div
+          id="pRouteBox"
+          class="route-box hidden"
+        >
+
+          <div>
+
+            <small>
+              Rijafstand
+            </small>
+
+            <b id="pRouteKm">
+              -
+            </b>
+
+          </div>
+
+
+          <div>
+
+            <small>
+              Geschatte rijtijd
+            </small>
+
+            <b id="pRouteTime">
+              -
+            </b>
+
+          </div>
+
+        </div>
+
+
         <div class="two">
-          <label>Datum<input id="pDate" type="date" required/></label>
-          <label>Tijd<input id="pTime" type="time" required/></label>
+
+          <label>
+            Datum
+
+            <input
+              id="pDate"
+              type="date"
+              required
+            >
+          </label>
+
+
+          <label>
+            Tijd
+
+            <input
+              id="pTime"
+              type="time"
+              required
+            >
+          </label>
+
         </div>
+
+
+        <!-- GEWICHT -->
+
+        <label>
+          Gewicht (kg)
+
+          <input
+            id="pWeight"
+            type="number"
+            min="0"
+            step="0.1"
+            inputmode="decimal"
+            placeholder="Bijv. 8"
+            required
+          >
+        </label>
+
+
+        <!-- AFMETINGEN -->
+
+        <div class="section-head">
+
+          <h3>
+            Afmetingen
+          </h3>
+
+        </div>
+
+        <p class="muted">
+          Vul de buitenmaten van de zending in centimeters in.
+        </p>
+
+
+        <div class="three">
+
+          <label>
+            Lengte
+
+            <input
+              id="pLengthCm"
+              type="number"
+              min="0"
+              step="1"
+              inputmode="numeric"
+              placeholder="cm"
+            >
+          </label>
+
+
+          <label>
+            Breedte
+
+            <input
+              id="pWidthCm"
+              type="number"
+              min="0"
+              step="1"
+              inputmode="numeric"
+              placeholder="cm"
+            >
+          </label>
+
+
+          <label>
+            Hoogte
+
+            <input
+              id="pHeightCm"
+              type="number"
+              min="0"
+              step="1"
+              inputmode="numeric"
+              placeholder="cm"
+            >
+          </label>
+
+        </div>
+
+
+        <label>
+          Zending
+
+          <select id="pParcelType">
+
+            <option value="Documenten">
+              Documenten
+            </option>
+
+            <option value="Pakket">
+              Pakket
+            </option>
+
+            <option value="Medische goederen">
+              Medische goederen
+            </option>
+
+            <option value="Onderdelen">
+              Onderdelen
+            </option>
+
+            <option value="Pallet">
+              Pallet
+            </option>
+
+            <option value="Overige">
+              Overige
+            </option>
+
+          </select>
+
+        </label>
+
+
+        <div
+          id="pParcelDescriptionBox"
+          class="hidden"
+        >
+
+          <label>
+            Omschrijf de zending
+
+            <textarea
+              id="pParcelDescription"
+              rows="4"
+              placeholder="Bijv. 2 dozen met machineonderdelen"
+            ></textarea>
+
+          </label>
+
+        </div>
+
+
         <div class="two">
-          <label>Naam<input id="pCustomerName" required placeholder="Naam"/></label>
-          <label>Telefoon<input id="pCustomerPhone" type="tel" required placeholder="06..."/></label>
+
+          <label>
+            Naam
+
+            <input
+              id="pCustomerName"
+              type="text"
+              required
+            >
+          </label>
+
+
+          <label>
+            Telefoon
+
+            <input
+              id="pCustomerPhone"
+              type="tel"
+              required
+            >
+          </label>
+
         </div>
-        <label>E-mail<input id="pCustomerEmail" type="email" required placeholder="naam@bedrijf.nl"/></label>
-        <div class="quote"><div><small>Indicatieve ritprijs</small><strong id="pPrice">Route eerst berekenen</strong></div><small>excl. btw</small></div>
-        <button class="primary wide" type="submit">Zending plannen</button>
+
+
+        <label>
+          E-mail
+
+          <input
+            id="pCustomerEmail"
+            type="email"
+            required
+          >
+        </label>
+
+
+        <div class="quote">
+
+          <div>
+
+            <small>
+              Indicatieve ritprijs
+            </small>
+
+            <strong id="pPrice">
+              € 0,00
+            </strong>
+
+          </div>
+
+          <small>
+            excl. btw
+          </small>
+
+        </div>
+
+
+        <button
+          class="primary wide"
+          type="submit"
+        >
+          Zending inplannen
+        </button>
+
       </form>
+
     </section>
 
-    <section id="rates" class="page">
-      <button class="back" data-go="home">←</button>
-      <h2>Tarieven</h2>
+
+    <!-- TARIEVEN -->
+
+    <section
+      id="rates"
+      class="page"
+    >
+
+      <button
+        class="back"
+        data-go="home"
+        type="button"
+      >
+        ←
+      </button>
+
+      <h2>
+        Tarieven
+      </h2>
+
       <div class="service-card">
-        <div class="badge">⚡</div><h3>Direct A → B</h3>
-        <p>Geen overslag en geen onnodige tussenstops.</p>
-        <ul><li>Starttarief €15</li><li>€1,30 per gereden kilometer</li><li>Eerste 10 minuten wachten gratis</li><li>Daarna €1/minuut</li><li>Nacht/weekend +50%</li></ul>
-      </div>
-      <button class="primary wide" data-go="booking">Direct boeken</button>
-    </section>
 
-    <section id="shipments" class="page">
-      <button class="back" data-go="home">←</button>
-      <h2>Mijn zendingen</h2>
-      <p class="muted">Op deze telefoon zie je de zendingen die je hier hebt aangevraagd.</p>
-      <div id="shipmentList" class="list"></div>
-    </section>
-
-    <section id="admin" class="page">
-      <button class="back" data-go="settings">←</button>
-      <h2>VR Admin</h2>
-      <div id="adminLoggedOut" class="service-card">
-        <h3>Beheerder inloggen</h3>
-        <p>Gebruik het beheerdersaccount uit Supabase.</p>
-        <form id="adminLoginForm">
-          <label>E-mail<input id="adminEmail" type="email" required></label>
-          <label>Wachtwoord<input id="adminPassword" type="password" required></label>
-          <button class="primary wide" type="submit">Inloggen</button>
-        </form>
-      </div>
-      <div id="adminLoggedIn" class="hidden">
-        <div class="admin-head">
-          <span id="adminIdentity"></span>
-          <button id="adminLogout" class="outline small-btn">Uitloggen</button>
+        <div class="badge">
+          ⚡
         </div>
-        <div id="adminList" class="list"></div>
+
+        <h3>
+          Directe koerier
+        </h3>
+
+        <p>
+          Geen overslag en geen onnodige tussenstops.
+        </p>
+
+        <ul>
+
+          <li>
+            Starttarief €15
+          </li>
+
+          <li>
+            €1,30 per kilometer
+          </li>
+
+          <li>
+            Nacht/weekend +50%
+          </li>
+
+        </ul>
+
       </div>
+
+      <button
+        class="primary wide"
+        data-go="booking"
+        type="button"
+      >
+        Direct boeken
+      </button>
+
     </section>
 
-    <section id="settings" class="page">
-      <button class="back" data-go="home">←</button>
-      <h2>Meer</h2>
-      <div class="service-card">
-        <h3>VR Spoedkoerier</h3>
-        <p>Direct A→B spoedtransport, 24/7 beschikbaar.</p>
-        <a class="primary wide link" href="tel:+31641137207">Bel 06 41137207</a>
-        <a class="outline wide link" href="https://wa.me/31641137207">WhatsApp</a>
-        <button class="outline wide" data-go="admin">VR Admin</button>
-      </div>
-      <div id="backendBadge" class="backend-badge"></div>
+
+    <!-- MIJN ZENDINGEN -->
+
+    <section
+      id="shipments"
+      class="page"
+    >
+
+      <button
+        class="back"
+        data-go="home"
+        type="button"
+      >
+        ←
+      </button>
+
+      <h2>
+        Mijn zendingen
+      </h2>
+
+      <p class="muted">
+        Hier staan de zendingen die op dit toestel zijn aangevraagd.
+      </p>
+
+      <div
+        id="shipmentList"
+        class="list"
+      ></div>
+
     </section>
+
+
+    <!-- ADMIN -->
+
+    <section
+      id="admin"
+      class="page"
+    >
+
+      <button
+        class="back"
+        data-go="settings"
+        type="button"
+      >
+        ←
+      </button>
+
+      <h2>
+        VR Admin
+      </h2>
+
+
+      <div
+        id="adminLoggedOut"
+        class="service-card"
+      >
+
+        <h3>
+          Beheerder inloggen
+        </h3>
+
+        <p>
+          Gebruik het beheerdersaccount uit Supabase.
+        </p>
+
+
+        <form id="adminLoginForm">
+
+          <label>
+            E-mail
+
+            <input
+              id="adminEmail"
+              type="email"
+              required
+            >
+          </label>
+
+
+          <label>
+            Wachtwoord
+
+            <input
+              id="adminPassword"
+              type="password"
+              required
+            >
+          </label>
+
+
+          <button
+            class="primary wide"
+            type="submit"
+          >
+            Inloggen
+          </button>
+
+        </form>
+
+      </div>
+
+
+      <div
+        id="adminLoggedIn"
+        class="hidden"
+      >
+
+        <div class="admin-head">
+
+          <span id="adminIdentity"></span>
+
+          <button
+            id="adminLogout"
+            class="outline"
+            type="button"
+          >
+            Uitloggen
+          </button>
+
+        </div>
+
+
+        <div
+          id="adminList"
+          class="list"
+        ></div>
+
+      </div>
+
+    </section>
+
+
+    <!-- MEER -->
+
+    <section
+      id="settings"
+      class="page"
+    >
+
+      <button
+        class="back"
+        data-go="home"
+        type="button"
+      >
+        ←
+      </button>
+
+      <h2>
+        Meer
+      </h2>
+
+
+      <div class="service-card">
+
+        <h3>
+          VR Spoedkoerier
+        </h3>
+
+        <p>
+          Direct A→B spoedtransport, 24/7 beschikbaar.
+        </p>
+
+
+        <a
+          class="primary wide link"
+          href="tel:+31641137207"
+        >
+          Bel 06 41137207
+        </a>
+
+
+        <a
+          class="outline wide link"
+          href="https://wa.me/31641137207"
+          target="_blank"
+          rel="noopener"
+        >
+          WhatsApp
+        </a>
+
+
+        <button
+          class="outline wide"
+          data-go="admin"
+          type="button"
+        >
+          VR Admin
+        </button>
+
+      </div>
+
+
+      <div
+        id="backendBadge"
+        class="backend-badge"
+      >
+      </div>
+
+    </section>
+
+
+    <!-- ONDERSTE NAVIGATIE -->
 
     <nav class="bottom">
-      <button data-go="home">⌂<span>Home</span></button>
-      <button data-go="shipments">□<span>Zendingen</span></button>
-      <button data-go="booking">＋<span>Boeken</span></button>
-      <button data-go="settings">☰<span>Meer</span></button>
+
+      <button
+        data-go="home"
+        type="button"
+      >
+        ⌂
+        <span>Home</span>
+      </button>
+
+
+      <button
+        data-go="shipments"
+        type="button"
+      >
+        □
+        <span>Zendingen</span>
+      </button>
+
+
+      <button
+        data-go="booking"
+        type="button"
+      >
+        ＋
+        <span>Boeken</span>
+      </button>
+
+
+      <button
+        data-go="settings"
+        type="button"
+      >
+        ☰
+        <span>Meer</span>
+      </button>
+
     </nav>
+
   </main>
+
 </div>
+
 
 <div id="toast"></div>
 
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script src="config.js"></script>
+
 <script src="app.js"></script>
+
 </body>
-</html>
+
+  </html>
