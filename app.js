@@ -18,111 +18,113 @@ let plannedRoute = {
 };
 
 
-/* =========================================
-   ALGEMENE FUNCTIES
-========================================= */
+/* =========================================================
+   HULPFUNCTIES
+========================================================= */
 
-function money(v){
+function uid(){
+  if(
+    window.crypto &&
+    typeof crypto.randomUUID === 'function'
+  ){
+    return crypto.randomUUID();
+  }
+
+  return (
+    Date.now().toString(36) +
+    Math.random().toString(36).slice(2)
+  );
+}
+
+function money(value){
   return new Intl.NumberFormat(
     'nl-NL',
     {
       style: 'currency',
       currency: 'EUR'
     }
-  ).format(
-    Number(v || 0)
-  );
+  ).format(Number(value || 0));
 }
 
 function calc(km, surcharge = false){
-  let p =
+  let price =
     BASE +
-    Number(km || 0) *
-    PER_KM;
+    Number(km || 0) * PER_KM;
 
   if(surcharge){
-    p *= 1.5;
+    price *= 1.5;
   }
 
-  return p;
+  return price;
 }
 
-function escapeHtml(v){
-  return String(v ?? '')
-    .replaceAll('&','&amp;')
-    .replaceAll('<','&lt;')
-    .replaceAll('>','&gt;')
-    .replaceAll('"','&quot;')
-    .replaceAll("'","&#039;");
+function escapeHtml(value){
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
 }
 
-function toast(t){
-  const e = $('#toast');
+function toast(message){
+  const element = $('#toast');
 
-  if(!e){
+  if(!element){
     return;
   }
 
-  e.textContent = t;
-  e.classList.add('show');
+  element.textContent = message;
+  element.classList.add('show');
 
-  setTimeout(
-    () => {
-      e.classList.remove('show');
-    },
-    2600
-  );
+  setTimeout(() => {
+    element.classList.remove('show');
+  }, 2600);
 }
 
-function fmtDuration(sec){
-  sec =
-    Number(sec || 0);
-
-  const min =
+function fmtDuration(seconds){
+  const minutes =
     Math.round(
-      sec / 60
+      Number(seconds || 0) / 60
     );
 
-  if(min < 60){
-    return `${min} min`;
+  if(minutes < 60){
+    return `${minutes} min`;
   }
 
-  const h =
-    Math.floor(
-      min / 60
-    );
+  const hours =
+    Math.floor(minutes / 60);
 
-  const m =
-    min % 60;
+  const remaining =
+    minutes % 60;
 
-  return `${h}u ${m}m`;
+  return `${hours}u ${remaining}m`;
 }
 
 function orderNo(){
-  const d =
-    new Date();
+  const d = new Date();
 
   return (
     'VR-' +
     d.getFullYear() +
     String(
       d.getMonth() + 1
-    ).padStart(2,'0') +
+    ).padStart(2, '0') +
     String(
       d.getDate()
-    ).padStart(2,'0') +
+    ).padStart(2, '0') +
     '-' +
     Math.random()
       .toString(36)
-      .slice(2,7)
+      .slice(2, 7)
       .toUpperCase()
   );
 }
 
 
-/* =========================================
+/* =========================================================
    SUPABASE
-========================================= */
+========================================================= */
 
 function hasBackend(){
   return !!(
@@ -136,45 +138,52 @@ function hasORS(){
 }
 
 function initSupabase(){
+  try{
+    if(
+      hasBackend() &&
+      window.supabase &&
+      window.supabase.createClient
+    ){
+      supa =
+        window.supabase.createClient(
+          CFG.SUPABASE_URL,
+          CFG.SUPABASE_ANON_KEY
+        );
+    }
+  }catch(error){
+    console.error(
+      'Supabase initialiseren mislukt:',
+      error
+    );
 
-  if(
-    hasBackend() &&
-    window.supabase &&
-    window.supabase.createClient
-  ){
-    supa =
-      window.supabase.createClient(
-        CFG.SUPABASE_URL,
-        CFG.SUPABASE_ANON_KEY
-      );
+    supa = null;
   }
 
-  const b =
+  const badge =
     $('#backendBadge');
 
-  if(b){
-    b.className =
+  if(badge){
+    badge.className =
       'backend-badge ' +
       (
         supa
-        ? 'ok'
-        : 'warn'
+          ? 'ok'
+          : 'warn'
       );
 
-    b.textContent =
+    badge.textContent =
       supa
-      ? 'Centrale orderdatabase: verbonden'
-      : 'Centrale orderdatabase: lokaal';
+        ? 'Centrale orderdatabase: verbonden'
+        : 'Centrale orderdatabase: niet verbonden';
   }
 }
 
 
-/* =========================================
-   PAGINA'S
-========================================= */
+/* =========================================================
+   PAGINA NAVIGATIE
+========================================================= */
 
 function show(id){
-
   const welcome =
     $('#welcome');
 
@@ -190,17 +199,15 @@ function show(id){
     shell.classList.remove('hidden');
   }
 
-  $$('.page').forEach(
-    x => {
-      x.classList.remove('active');
-    }
-  );
+  $$('.page').forEach(page => {
+    page.classList.remove('active');
+  });
 
-  const page =
+  const target =
     $('#' + id);
 
-  if(page){
-    page.classList.add('active');
+  if(target){
+    target.classList.add('active');
   }
 
   if(id === 'admin'){
@@ -209,74 +216,67 @@ function show(id){
 
   render();
 
-  scrollTo(0,0);
+  window.scrollTo(
+    0,
+    0
+  );
 }
 
-$$('[data-go]').forEach(
-  b => {
-
-    b.addEventListener(
+function initNavigation(){
+  $$('[data-go]').forEach(button => {
+    button.addEventListener(
       'click',
       () => {
-        show(
-          b.dataset.go
-        );
+        show(button.dataset.go);
       }
     );
+  });
+}
 
-  }
-);
 
-
-/* =========================================
+/* =========================================================
    LOKALE KLANTORDERS
-========================================= */
+========================================================= */
 
 function localShipments(){
-
   try{
-
     return JSON.parse(
       localStorage.getItem(
         'vr_shipments'
       ) || '[]'
     );
-
-  }catch{
+  }catch(error){
+    console.error(error);
 
     return [];
-
   }
 }
 
-function saveLocal(s){
-
-  const a =
+function saveLocal(shipment){
+  const shipments =
     localShipments();
 
   const index =
-    a.findIndex(
-      x =>
-        x.order_number ===
-        s.order_number
+    shipments.findIndex(
+      item =>
+        item.order_number ===
+        shipment.order_number
     );
 
   if(index >= 0){
-
-    a[index] = {
-      ...a[index],
-      ...s
+    shipments[index] = {
+      ...shipments[index],
+      ...shipment
     };
-
   }else{
-
-    a.unshift(s);
-
+    shipments.unshift(
+      shipment
+    );
   }
 
   localStorage.setItem(
     'vr_shipments',
-    JSON.stringify(a)
+    JSON.stringify(shipments)
   );
 
   render();
@@ -286,28 +286,23 @@ function updateLocalShipment(
   orderNumber,
   changes
 ){
-
-  const a =
+  const shipments =
     localShipments();
 
   const updated =
-    a.map(
-      s => {
-
+    shipments.map(
+      shipment => {
         if(
-          s.order_number === orderNumber ||
-          s.order === orderNumber
+          shipment.order_number === orderNumber ||
+          shipment.order === orderNumber
         ){
-
           return {
-            ...s,
+            ...shipment,
             ...changes
           };
-
         }
 
-        return s;
-
+        return shipment;
       }
     );
 
@@ -322,17 +317,16 @@ function updateLocalShipment(
 function removeLocalShipment(
   orderNumber
 ){
-
-  const a =
+  const shipments =
     localShipments();
 
   const updated =
-    a.filter(
-      s =>
+    shipments.filter(
+      shipment =>
         (
-          s.order_number ||
-          s.order ||
-          s.id
+          shipment.order_number ||
+          shipment.order ||
+          shipment.id
         ) !== orderNumber
     );
 
@@ -345,91 +339,56 @@ function removeLocalShipment(
 }
 
 
-/* =========================================
-   ANNULERINGSREGELS
-========================================= */
+/* =========================================================
+   AFMETINGEN EN OVERIGE
+========================================================= */
 
-function customerCanCancel(s){
-
-  return (
-    s.status === 'Aangevraagd' ||
-    s.status === 'Geaccepteerd'
-  );
-}
-
-function estimatedCancellationFee(s){
-
-  if(
-    s.status === 'Aangevraagd'
-  ){
-    return 0;
-  }
-
-  if(
-    s.status === 'Geaccepteerd'
-  ){
-
-    return Math.max(
-      15,
-      Number(
-        s.price || 0
-      ) * 0.25
+function shipmentDimensions(shipment){
+  const length =
+    Number(
+      shipment.length_cm || 0
     );
 
-  }
-
-  return null;
-}
-
-
-/* =========================================
-   AFMETINGEN / OVERIGE
-========================================= */
-
-function shipmentDimensions(s){
-
-  const l =
+  const width =
     Number(
-      s.length_cm || 0
+      shipment.width_cm || 0
     );
 
-  const w =
+  const height =
     Number(
-      s.width_cm || 0
-    );
-
-  const h =
-    Number(
-      s.height_cm || 0
+      shipment.height_cm || 0
     );
 
   if(
-    !l &&
-    !w &&
-    !h
+    !length &&
+    !width &&
+    !height
   ){
     return '';
   }
 
-  return `${l || '-'} × ${w || '-'} × ${h || '-'} cm`;
+  return (
+    `${length || '-'} × ` +
+    `${width || '-'} × ` +
+    `${height || '-'} cm`
+  );
 }
 
 function toggleParcelDescription(
-  prefix = ''
+  planned = false
 ){
-
   const type =
     $(
-      prefix
-      ? '#pParcelType'
-      : '#parcelType'
+      planned
+        ? '#pParcelType'
+        : '#parcelType'
     );
 
   const box =
     $(
-      prefix
-      ? '#pParcelDescriptionBox'
-      : '#parcelDescriptionBox'
+      planned
+        ? '#pParcelDescriptionBox'
+        : '#parcelDescriptionBox'
     );
 
   if(
@@ -439,124 +398,171 @@ function toggleParcelDescription(
     return;
   }
 
-  const isOther =
+  const other =
     type.value
       .trim()
       .toLowerCase() ===
     'overige';
 
-  if(isOther){
-    box.classList.remove(
-      'hidden'
-    );
-  }else{
-    box.classList.add(
-      'hidden'
+  box.classList.toggle(
+    'hidden',
+    !other
+  );
+}
+
+function initParcelFields(){
+  const directType =
+    $('#parcelType');
+
+  if(directType){
+    directType.addEventListener(
+      'change',
+      () => {
+        toggleParcelDescription(false);
+      }
     );
   }
+
+  const plannedType =
+    $('#pParcelType');
+
+  if(plannedType){
+    plannedType.addEventListener(
+      'change',
+      () => {
+        toggleParcelDescription(true);
+      }
+    );
+  }
+
+  toggleParcelDescription(false);
+  toggleParcelDescription(true);
 }
 
-const parcelType =
-  $('#parcelType');
 
-if(parcelType){
+/* =========================================================
+   ANNULERINGSREGELS
+========================================================= */
 
-  parcelType.addEventListener(
-    'change',
-    () => {
-      toggleParcelDescription('');
-    }
+function customerCanCancel(shipment){
+  return [
+    'Aangevraagd',
+    'Gepland',
+    'Geaccepteerd'
+  ].includes(
+    shipment.status
   );
-
 }
 
-const pParcelType =
-  $('#pParcelType');
+function estimatedCancellationFee(
+  shipment
+){
+  if(
+    shipment.status === 'Aangevraagd' ||
+    shipment.status === 'Gepland'
+  ){
+    return 0;
+  }
 
-if(pParcelType){
+  if(
+    shipment.status === 'Geaccepteerd'
+  ){
+    return Math.max(
+      15,
+      Number(
+        shipment.price || 0
+      ) * 0.25
+    );
+  }
 
-  pParcelType.addEventListener(
-    'change',
-    () => {
-      toggleParcelDescription('p');
-    }
-  );
-
+  return null;
 }
 
 
-/* =========================================
+/* =========================================================
    ORDERKAART
-========================================= */
+========================================================= */
 
 function shipmentCard(
-  s,
+  shipment,
   admin = false
 ){
-
   const order =
-    s.order_number ||
-    s.order ||
-    s.id ||
+    shipment.order_number ||
+    shipment.order ||
+    shipment.id ||
     '';
 
-  const dist =
-    s.distance_km ||
-    s.km ||
+  const distance =
+    shipment.distance_km ||
+    shipment.km ||
     '';
 
   const status =
-    s.status ||
-    '';
-
-  const fee =
-    Number(
-      s.cancellation_fee || 0
-    );
+    shipment.status || '';
 
   const dimensions =
-    shipmentDimensions(s);
+    shipmentDimensions(
+      shipment
+    );
 
-  let customerActions = '';
+  const cancellationFee =
+    Number(
+      shipment.cancellation_fee || 0
+    );
 
-  if(!admin){
+  let actions = '';
 
+  if(admin){
+    actions = `
+      <div class="admin-actions">
+
+        <select
+          class="update-status"
+          data-order="${escapeHtml(order)}"
+        >
+
+          ${
+            [
+              'Aangevraagd',
+              'Gepland',
+              'Geaccepteerd',
+              'Onderweg',
+              'Opgehaald',
+              'Afgeleverd',
+              'Geannuleerd'
+            ]
+            .map(
+              item => `
+                <option
+                  value="${item}"
+                  ${
+                    item === status
+                      ? 'selected'
+                      : ''
+                  }
+                >
+                  ${item}
+                </option>
+              `
+            )
+            .join('')
+          }
+
+        </select>
+
+      </div>
+    `;
+  }else{
     if(
-      status === 'Geannuleerd'
+      customerCanCancel(shipment)
     ){
+      const fee =
+        estimatedCancellationFee(
+          shipment
+        );
 
-      customerActions = `
-        <div class="customer-actions">
-
-          <p>
-            <b>Geannuleerd</b>
-            ${
-              fee > 0
-              ? ` · Annuleringskosten ${money(fee)}`
-              : ' · Geen annuleringskosten'
-            }
-          </p>
-
-          <button
-            type="button"
-            class="delete-local"
-            data-order="${escapeHtml(order)}"
-          >
-            Verwijderen uit Mijn zendingen
-          </button>
-
-        </div>
-      `;
-
-    }else if(
-      customerCanCancel(s) &&
-      s.customer_token
-    ){
-
-      const estimated =
-        estimatedCancellationFee(s);
-
-      customerActions = `
+      actions += `
         <div class="customer-actions">
 
           <button
@@ -565,10 +571,29 @@ function shipmentCard(
             data-order="${escapeHtml(order)}"
           >
             ${
-              estimated === 0
-              ? 'Zending gratis annuleren'
-              : `Annuleren · ${money(estimated)}`
+              fee === 0
+                ? 'Zending annuleren'
+                : `Annuleren · ca. ${money(fee)}`
             }
+          </button>
+
+        </div>
+      `;
+    }
+
+    if(
+      status === 'Geannuleerd' ||
+      status === 'Afgeleverd'
+    ){
+      actions += `
+        <div class="customer-actions">
+
+          <button
+            type="button"
+            class="delete-local"
+            data-order="${escapeHtml(order)}"
+          >
+            Verwijderen uit Mijn zendingen
           </button>
 
         </div>
@@ -594,19 +619,19 @@ function shipmentCard(
 
             <span>
               ${escapeHtml(
-                s.when || ''
+                shipment.when || ''
               )}
             </span>
 
-            <span>
-              ${
-                dist
-                ? Number(dist)
-                    .toFixed(1) +
-                  ' km'
+            ${
+              distance
+                ? `
+                  <span>
+                    ${Number(distance).toFixed(1)} km
+                  </span>
+                `
                 : ''
-              }
-            </span>
+            }
 
             <span>
               ${escapeHtml(status)}
@@ -622,7 +647,7 @@ function shipmentCard(
 
         <span>
           ${escapeHtml(
-            s.pickup || ''
+            shipment.pickup || ''
           )}
         </span>
 
@@ -630,151 +655,209 @@ function shipmentCard(
 
         <span>
           ${escapeHtml(
-            s.dropoff || ''
+            shipment.dropoff || ''
           )}
         </span>
 
       </div>
 
-      <div class="meta">
-
-        ${
-          s.weight_kg
+      ${
+        shipment.weight_kg
           ? `
-            <span>
-              Gewicht:
-              ${escapeHtml(
-                s.weight_kg
-              )} kg
-            </span>
+            <div class="meta">
+              <span>
+                Gewicht:
+                ${escapeHtml(
+                  shipment.weight_kg
+                )} kg
+              </span>
+            </div>
           `
           : ''
-        }
+      }
 
-        ${
-          dimensions
+      ${
+        dimensions
           ? `
-            <span>
-              Afmetingen:
-              ${escapeHtml(
-                dimensions
-              )}
-            </span>
+            <div class="meta">
+              <span>
+                Afmetingen:
+                ${escapeHtml(
+                  dimensions
+                )}
+              </span>
+            </div>
           `
           : ''
-        }
-
-      </div>
-
-      ${
-        s.parcel_type
-        ? `
-          <div class="meta">
-            <span>
-              Zending:
-              ${escapeHtml(
-                s.parcel_type
-              )}
-            </span>
-          </div>
-        `
-        : ''
       }
 
       ${
-        s.parcel_description
-        ? `
-          <div class="meta">
-            <span>
-              Omschrijving:
-              ${escapeHtml(
-                s.parcel_description
-              )}
-            </span>
-          </div>
-        `
-        : ''
+        shipment.parcel_type
+          ? `
+            <div class="meta">
+              <span>
+                Zending:
+                ${escapeHtml(
+                  shipment.parcel_type
+                )}
+              </span>
+            </div>
+          `
+          : ''
       }
 
       ${
-        s.price
-        ? `
-          <div class="meta">
-            <span>
-              Ritprijs
-              ${money(s.price)}
-              excl. btw
-            </span>
-          </div>
-        `
-        : ''
+        shipment.parcel_description
+          ? `
+            <div class="meta">
+              <span>
+                Omschrijving:
+                ${escapeHtml(
+                  shipment.parcel_description
+                )}
+              </span>
+            </div>
+          `
+          : ''
       }
 
       ${
-        admin
-        ? `
-          <div class="admin-actions">
-
-            <select
-              class="update-status"
-              data-order="${escapeHtml(order)}"
-            >
-
-              ${
-                [
-                  'Aangevraagd',
-                  'Geaccepteerd',
-                  'Onderweg',
-                  'Opgehaald',
-                  'Afgeleverd',
-                  'Geannuleerd'
-                ]
-                .map(
-                  x => `
-                    <option
-                      ${
-                        x === status
-                        ? 'selected'
-                        : ''
-                      }
-                    >
-                      ${x}
-                    </option>
-                  `
-                )
-                .join('')
-              }
-
-            </select>
-
-          </div>
-        `
-        : customerActions
+        shipment.price
+          ? `
+            <div class="meta">
+              <span>
+                Ritprijs:
+                ${money(
+                  shipment.price
+                )}
+                excl. btw
+              </span>
+            </div>
+          `
+          : ''
       }
+
+      ${
+        status === 'Geannuleerd'
+          ? `
+            <div class="meta">
+              <span>
+                ${
+                  cancellationFee > 0
+                    ? `Annuleringskosten: ${money(cancellationFee)}`
+                    : 'Geen annuleringskosten'
+                }
+              </span>
+            </div>
+          `
+          : ''
+      }
+
+      ${actions}
 
     </div>
   `;
 }
 
 
-/* =========================================
+/* =========================================================
+   RENDER KLANTORDERS
+========================================================= */
+
+function render(){
+  const shipments =
+    localShipments();
+
+  const list =
+    $('#shipmentList');
+
+  if(list){
+    list.innerHTML =
+      shipments.length
+        ? shipments
+            .map(
+              shipment =>
+                shipmentCard(
+                  shipment,
+                  false
+                )
+            )
+            .join('')
+        : '<p>Nog geen zendingen.</p>';
+  }
+
+  const recent =
+    $('#recentList');
+
+  if(recent){
+    recent.innerHTML =
+      shipments.length
+        ? shipments
+            .slice(0, 3)
+            .map(
+              shipment =>
+                shipmentCard(
+                  shipment,
+                  false
+                )
+            )
+            .join('')
+        : '<p>Nog geen recente zendingen.</p>';
+  }
+
+  $$('.cancel-order').forEach(
+    button => {
+      button.addEventListener(
+        'click',
+        () => {
+          cancelCustomerOrder(
+            button.dataset.order
+          );
+        }
+      );
+    }
+  );
+
+  $$('.delete-local').forEach(
+    button => {
+      button.addEventListener(
+        'click',
+        () => {
+          if(
+            confirm(
+              'Deze zending uit Mijn zendingen verwijderen?'
+            )
+          ){
+            removeLocalShipment(
+              button.dataset.order
+            );
+
+            toast(
+              'Zending verwijderd.'
+            );
+          }
+        }
+      );
+    }
+  );
+}
+
+
+/* =========================================================
    KLANT ANNULEREN
-========================================= */
+========================================================= */
 
 async function cancelCustomerOrder(
   orderNumber
 ){
-
   const shipment =
-    localShipments()
-      .find(
-        s =>
-          s.order_number ===
-          orderNumber
-      );
+    localShipments().find(
+      item =>
+        item.order_number ===
+        orderNumber
+    );
 
   if(!shipment){
-
     toast(
       'Zending niet gevonden.'
     );
@@ -787,7 +870,6 @@ async function cancelCustomerOrder(
       shipment
     )
   ){
-
     toast(
       'Deze zending kan niet meer via de app worden geannuleerd.'
     );
@@ -795,28 +877,19 @@ async function cancelCustomerOrder(
     return;
   }
 
-  const estimated =
+  const fee =
     estimatedCancellationFee(
       shipment
     );
 
-  let message = '';
-
-  if(
-    estimated === 0
-  ){
-
-    message =
-      'Deze zending is nog niet geaccepteerd. Annuleren is gratis. Doorgaan?';
-
-  }else{
-
-    message =
-      'Deze rit is al geaccepteerd. De annuleringskosten zijn 25% van de ritprijs met minimaal €15. Kosten: ' +
-      money(estimated) +
-      '. Doorgaan?';
-
-  }
+  const message =
+    fee === 0
+      ? 'Deze zending kan kosteloos worden geannuleerd. Doorgaan?'
+      : (
+          'Deze zending is al geaccepteerd. ' +
+          `Geschatte annuleringskosten: ${money(fee)}. ` +
+          'Doorgaan?'
+        );
 
   if(
     !confirm(message)
@@ -824,258 +897,132 @@ async function cancelCustomerOrder(
     return;
   }
 
-  if(!supa){
-
-    updateLocalShipment(
-      orderNumber,
-      {
-        status:
-          'Geannuleerd',
-
-        cancellation_fee:
-          estimated || 0,
-
-        cancelled_at:
-          new Date()
-            .toISOString()
-      }
-    );
-
-    toast(
-      'Zending geannuleerd.'
-    );
-
-    return;
-  }
+  /*
+    Als de veilige Supabase RPC aanwezig is,
+    annuleren we ook centraal.
+  */
 
   if(
-    !shipment.customer_token
+    supa &&
+    shipment.customer_token &&
+    shipment.backend_cancel_supported
   ){
+    try{
+      const {
+        data,
+        error
+      } =
+        await supa.rpc(
+          'cancel_customer_order',
+          {
+            p_order_number:
+              orderNumber,
 
-    toast(
-      'Deze oudere zending heeft geen beveiligde annuleringstoken.'
-    );
+            p_customer_token:
+              shipment.customer_token
+          }
+        );
 
-    return;
-  }
+      if(error){
+        throw error;
+      }
 
-  try{
+      const result =
+        Array.isArray(data)
+          ? data[0]
+          : data;
 
-    const {
-      data,
-      error
-    } =
-      await supa.rpc(
-        'cancel_customer_order',
+      updateLocalShipment(
+        orderNumber,
         {
-          p_order_number:
-            orderNumber,
+          status:
+            'Geannuleerd',
 
-          p_customer_token:
-            shipment.customer_token
+          cancellation_fee:
+            Number(
+              result?.cancellation_fee ??
+              fee ??
+              0
+            ),
+
+          cancelled_at:
+            result?.cancelled_at ||
+            new Date().toISOString()
         }
       );
 
-    if(error){
+      toast(
+        'Zending geannuleerd.'
+      );
 
+      return;
+
+    }catch(error){
       console.error(
-        'Annuleren mislukt:',
+        'Centrale annulering mislukt:',
         error
       );
 
-      throw error;
+      toast(
+        'Annuleren kon niet centraal worden verwerkt.'
+      );
+
+      return;
     }
-
-    const result =
-      Array.isArray(data)
-      ? data[0]
-      : data;
-
-    updateLocalShipment(
-      orderNumber,
-      {
-        status:
-          'Geannuleerd',
-
-        cancellation_fee:
-          Number(
-            result?.cancellation_fee ??
-            estimated ??
-            0
-          ),
-
-        cancelled_at:
-          result?.cancelled_at ||
-          new Date()
-            .toISOString()
-      }
-    );
-
-    toast(
-      Number(
-        result?.cancellation_fee || 0
-      ) > 0
-      ? 'Zending geannuleerd. Annuleringskosten geregistreerd.'
-      : 'Zending gratis geannuleerd.'
-    );
-
-  }catch(err){
-
-    console.error(err);
-
-    toast(
-      'Annuleren kon niet worden verwerkt.'
-    );
-
   }
+
+  /*
+    Geen centrale annuleringsfunctie:
+    we veranderen NIET stilletjes de database.
+  */
+
+  toast(
+    'Annuleren via de centrale database moet nog worden gekoppeld.'
+  );
 }
 
 
-/* =========================================
-   RENDER
-========================================= */
-
-function render(){
-
-  const a =
-    localShipments();
-
-  const shipmentList =
-    $('#shipmentList');
-
-  if(shipmentList){
-
-    shipmentList.innerHTML =
-      a.length
-      ? a
-          .map(
-            s =>
-              shipmentCard(
-                s,
-                false
-              )
-          )
-          .join('')
-      : '<p>Nog geen zendingen.</p>';
-
-  }
-
-  const recentList =
-    $('#recentList');
-
-  if(recentList){
-
-    recentList.innerHTML =
-      a.length
-      ? a
-          .slice(0,3)
-          .map(
-            s =>
-              shipmentCard(
-                s,
-                false
-              )
-          )
-          .join('')
-      : '<p>Nog geen recente zendingen.</p>';
-
-  }
-
-  $$('.cancel-order')
-    .forEach(
-      btn => {
-
-        btn.addEventListener(
-          'click',
-          () => {
-
-            cancelCustomerOrder(
-              btn.dataset.order
-            );
-
-          }
-        );
-
-      }
-    );
-
-  $$('.delete-local')
-    .forEach(
-      btn => {
-
-        btn.addEventListener(
-          'click',
-          () => {
-
-            const order =
-              btn.dataset.order;
-
-            if(
-              confirm(
-                'Deze geannuleerde zending uit Mijn zendingen verwijderen?'
-              )
-            ){
-
-              removeLocalShipment(
-                order
-              );
-
-              toast(
-                'Zending verwijderd uit deze telefoon.'
-              );
-
-            }
-
-          }
-        );
-
-      }
-    );
-}
-
-
-/* =========================================
+/* =========================================================
    ROUTE UI
-========================================= */
+========================================================= */
 
 function setRouteUI(
-  prefix,
+  planned,
   route
 ){
-
   const box =
     $(
-      prefix
-      ? '#pRouteBox'
-      : '#routeBox'
+      planned
+        ? '#pRouteBox'
+        : '#routeBox'
     );
 
-  const stat =
+  const status =
     $(
-      prefix
-      ? '#pRouteStatus'
-      : '#routeStatus'
+      planned
+        ? '#pRouteStatus'
+        : '#routeStatus'
     );
 
-  const kmEl =
+  const km =
     $(
-      prefix
-      ? '#pRouteKm'
-      : '#routeKm'
+      planned
+        ? '#pRouteKm'
+        : '#routeKm'
     );
 
-  const timeEl =
+  const time =
     $(
-      prefix
-      ? '#pRouteTime'
-      : '#routeTime'
+      planned
+        ? '#pRouteTime'
+        : '#routeTime'
     );
 
-  const priceEl =
+  const price =
     $(
-      prefix
-      ? '#pPrice'
-      : '#price'
+      planned
+        ? '#pPrice'
+        : '#price'
     );
 
   if(
@@ -1085,115 +1032,93 @@ function setRouteUI(
     return;
   }
 
-  if(box){
-    box.classList.remove(
-      'hidden'
-    );
+  box?.classList.remove(
+    'hidden'
+  );
+
+  if(km){
+    km.textContent =
+      `${Number(route.km).toFixed(1)} km`;
   }
 
-  if(kmEl){
-
-    kmEl.textContent =
-      Number(
-        route.km
-      ).toFixed(1) +
-      ' km';
-
-  }
-
-  if(timeEl){
-
-    timeEl.textContent =
+  if(time){
+    time.textContent =
       fmtDuration(
         route.seconds
       );
-
   }
 
-  if(stat){
-
-    stat.textContent =
+  if(status){
+    status.textContent =
       'Route berekend';
-
   }
 
-  let surcharge =
-    false;
+  let surcharge = false;
 
-  if(prefix){
-
+  if(planned){
     surcharge =
       plannedSurcharge(
         $('#pDate')?.value,
         $('#pTime')?.value
       );
-
   }else{
-
     surcharge =
-      !!$('#afterHours')
-        ?.checked;
-
+      !!$('#afterHours')?.checked;
   }
 
-  if(priceEl){
-
-    priceEl.textContent =
+  if(price){
+    price.textContent =
       money(
         calc(
           route.km,
           surcharge
         )
       );
-
   }
 }
 
 
-/* =========================================
+/* =========================================================
    TOESLAG
-========================================= */
+========================================================= */
 
 function plannedSurcharge(
-  d,
-  t
+  date,
+  time
 ){
-
   if(
-    !d ||
-    !t
+    !date ||
+    !time
   ){
     return false;
   }
 
   const hour =
     Number(
-      t.split(':')[0]
+      time.split(':')[0]
     );
 
-  const dow =
+  const day =
     new Date(
-      d +
-      'T12:00:00'
+      date + 'T12:00:00'
     ).getDay();
 
   return (
     hour >= 17 ||
     hour < 8 ||
-    dow === 0 ||
-    dow === 6
+    day === 0 ||
+    day === 6
   );
 }
 
 
-/* =========================================
+/* =========================================================
    OPENROUTESERVICE
-========================================= */
+========================================================= */
 
 async function orsGeocode(
   address
 ){
-
   const url =
     'https://api.heigit.org/pelias/v1/search' +
     '?api_key=' +
@@ -1207,56 +1132,43 @@ async function orsGeocode(
     '&boundary.country=NLD' +
     '&size=1';
 
-  const res =
+  const response =
     await fetch(url);
 
-  if(!res.ok){
-
+  if(!response.ok){
     throw new Error(
       'Adres zoeken mislukt'
     );
-
   }
 
   const data =
-    await res.json();
+    await response.json();
 
   if(
     !data.features ||
     !data.features.length
   ){
-
     throw new Error(
       'Adres niet gevonden'
     );
-
   }
 
-  const coords =
+  const coordinates =
     data.features[0]
       .geometry
       .coordinates;
 
   return {
-    lng:
-      coords[0],
-
-    lat:
-      coords[1]
+    lng: coordinates[0],
+    lat: coordinates[1]
   };
 }
-
-
-/* =========================================
-   ROUTE BEREKENING
-========================================= */
 
 async function calculateRoute(
   origin,
   destination,
-  prefix = ''
+  planned = false
 ){
-
   if(
     !origin ||
     !destination
@@ -1264,34 +1176,28 @@ async function calculateRoute(
     return;
   }
 
-  const stat =
+  const status =
     $(
-      prefix
-      ? '#pRouteStatus'
-      : '#routeStatus'
+      planned
+        ? '#pRouteStatus'
+        : '#routeStatus'
     );
 
   if(!hasORS()){
-
-    if(stat){
-
-      stat.textContent =
+    if(status){
+      status.textContent =
         'Routeberekening is niet gekoppeld.';
-
     }
 
     return;
   }
 
-  if(stat){
-
-    stat.textContent =
+  if(status){
+    status.textContent =
       'Route wordt berekend...';
-
   }
 
   try{
-
     const from =
       await orsGeocode(
         origin
@@ -1317,38 +1223,29 @@ async function calculateRoute(
       ',' +
       to.lat;
 
-    const res =
+    const response =
       await fetch(url);
 
-    if(!res.ok){
-
-      const msg =
-        await res.text();
-
+    if(!response.ok){
       console.error(
-        'ORS route fout:',
-        res.status,
-        msg
+        await response.text()
       );
 
       throw new Error(
         'Routeberekening mislukt'
       );
-
     }
 
     const data =
-      await res.json();
+      await response.json();
 
     if(
       !data.features ||
       !data.features.length
     ){
-
       throw new Error(
         'Geen route gevonden'
       );
-
     }
 
     const summary =
@@ -1357,397 +1254,349 @@ async function calculateRoute(
         .summary;
 
     const route = {
-
       km:
         summary.distance /
         1000,
 
       seconds:
         summary.duration
-
     };
 
-    if(prefix){
-
-      plannedRoute =
-        route;
-
+    if(planned){
+      plannedRoute = route;
     }else{
-
-      directRoute =
-        route;
-
+      directRoute = route;
     }
 
     setRouteUI(
-      prefix,
+      planned,
       route
     );
 
-  }catch(err){
+  }catch(error){
+    console.error(
+      error
+    );
 
-    console.error(err);
-
-    if(stat){
-
-      stat.textContent =
-        err.message ||
+    if(status){
+      status.textContent =
+        error.message ||
         'Route kon niet worden berekend';
-
     }
-
   }
 }
 
 
-/* =========================================
+/* =========================================================
    DEBOUNCE
-========================================= */
+========================================================= */
 
 function debounce(
   fn,
-  ms = 650
+  delay = 650
 ){
-
-  let t;
+  let timer;
 
   return (...args) => {
+    clearTimeout(timer);
 
-    clearTimeout(t);
-
-    t =
+    timer =
       setTimeout(
-        () =>
-          fn(...args),
-        ms
+        () => fn(...args),
+        delay
       );
-
   };
 }
 
-const routeDirectDeb =
-  debounce(
-    () => {
+function initRouteInputs(){
+  const directRouteDebounced =
+    debounce(
+      () => {
+        calculateRoute(
+          $('#pickup')?.value,
+          $('#dropoff')?.value,
+          false
+        );
+      }
+    );
 
-      calculateRoute(
-        $('#pickup')?.value,
-        $('#dropoff')?.value,
-        ''
-      );
+  const plannedRouteDebounced =
+    debounce(
+      () => {
+        calculateRoute(
+          $('#pPickup')?.value,
+          $('#pDropoff')?.value,
+          true
+        );
+      }
+    );
 
-    }
-  );
-
-const routePlannedDeb =
-  debounce(
-    () => {
-
-      calculateRoute(
-        $('#pPickup')?.value,
-        $('#pDropoff')?.value,
-        'p'
-      );
-
-    }
-  );
-
-[
-  'pickup',
-  'dropoff'
-]
-.forEach(
-  id => {
-
-    const e =
+  [
+    'pickup',
+    'dropoff'
+  ].forEach(id => {
+    const field =
       $('#' + id);
 
-    if(e){
-
-      e.addEventListener(
+    if(field){
+      field.addEventListener(
         'input',
-        routeDirectDeb
+        directRouteDebounced
       );
 
-      e.addEventListener(
+      field.addEventListener(
         'change',
-        routeDirectDeb
+        directRouteDebounced
       );
-
     }
+  });
 
-  }
-);
-
-[
-  'pPickup',
-  'pDropoff'
-]
-.forEach(
-  id => {
-
-    const e =
+  [
+    'pPickup',
+    'pDropoff'
+  ].forEach(id => {
+    const field =
       $('#' + id);
 
-    if(e){
-
-      e.addEventListener(
+    if(field){
+      field.addEventListener(
         'input',
-        routePlannedDeb
+        plannedRouteDebounced
       );
 
-      e.addEventListener(
+      field.addEventListener(
         'change',
-        routePlannedDeb
+        plannedRouteDebounced
       );
-
     }
+  });
 
-  }
-);
-
-
-/* =========================================
-   PRIJS HERBEREKENEN
-========================================= */
-
-const afterHours =
-  $('#afterHours');
-
-if(afterHours){
-
-  afterHours.addEventListener(
-    'change',
-    () => {
-
-      if(
-        directRoute.km
-      ){
-
-        setRouteUI(
-          '',
-          directRoute
-        );
-
+  $('#afterHours')
+    ?.addEventListener(
+      'change',
+      () => {
+        if(directRoute.km){
+          setRouteUI(
+            false,
+            directRoute
+          );
+        }
       }
+    );
 
-    }
-  );
-
-}
-
-const pDate =
-  $('#pDate');
-
-if(pDate){
-
-  pDate.addEventListener(
-    'change',
-    () => {
-
-      if(
-        plannedRoute.km
-      ){
-
-        setRouteUI(
-          'p',
-          plannedRoute
-        );
-
+  $('#pDate')
+    ?.addEventListener(
+      'change',
+      () => {
+        if(plannedRoute.km){
+          setRouteUI(
+            true,
+            plannedRoute
+          );
+        }
       }
+    );
 
-    }
-  );
-
-}
-
-const pTime =
-  $('#pTime');
-
-if(pTime){
-
-  pTime.addEventListener(
-    'change',
-    () => {
-
-      if(
-        plannedRoute.km
-      ){
-
-        setRouteUI(
-          'p',
-          plannedRoute
-        );
-
+  $('#pTime')
+    ?.addEventListener(
+      'change',
+      () => {
+        if(plannedRoute.km){
+          setRouteUI(
+            true,
+            plannedRoute
+          );
+        }
       }
+    );
+}
 
-    }
+function initRouteStatus(){
+  const message =
+    hasORS()
+      ? 'Vul beide adressen in om de route te berekenen.'
+      : 'Routeberekening is niet gekoppeld.';
+
+  if($('#routeStatus')){
+    $('#routeStatus').textContent =
+      message;
+  }
+
+  if($('#pRouteStatus')){
+    $('#pRouteStatus').textContent =
+      message;
+  }
+}
+
+
+/* =========================================================
+   DATABASE ORDER OPSLAAN
+========================================================= */
+
+function buildDatabaseRow(
+  payload,
+  includeCancellationFields = true
+){
+  const row = {
+    order_number:
+      payload.order_number,
+
+    pickup:
+      payload.pickup,
+
+    dropoff:
+      payload.dropoff,
+
+    distance_km:
+      payload.distance_km,
+
+    duration_minutes:
+      payload.duration_minutes,
+
+    price:
+      payload.price,
+
+    status:
+      payload.status,
+
+    parcel_type:
+      payload.parcel_type || '',
+
+    parcel_description:
+      payload.parcel_description || '',
+
+    weight_kg:
+      payload.weight_kg || null,
+
+    length_cm:
+      payload.length_cm || null,
+
+    width_cm:
+      payload.width_cm || null,
+
+    height_cm:
+      payload.height_cm || null,
+
+    customer_name:
+      payload.customer_name || '',
+
+    customer_phone:
+      payload.customer_phone || '',
+
+    customer_email:
+      payload.customer_email || '',
+
+    when:
+      payload.when || ''
+  };
+
+  if(includeCancellationFields){
+    row.customer_token =
+      payload.customer_token;
+
+    row.cancellation_fee =
+      0;
+  }
+
+  return row;
+}
+
+function missingOptionalCancellationColumn(
+  error
+){
+  const text =
+    (
+      error?.message ||
+      ''
+    ).toLowerCase();
+
+  return (
+    text.includes('customer_token') ||
+    text.includes('cancellation_fee')
   );
-
 }
-
-
-/* =========================================
-   ROUTE INIT
-========================================= */
-
-function loadMaps(){
-
-  if(!hasORS()){
-
-    if(
-      $('#routeStatus')
-    ){
-
-      $('#routeStatus')
-        .textContent =
-        'Routeberekening is niet gekoppeld.';
-
-    }
-
-    if(
-      $('#pRouteStatus')
-    ){
-
-      $('#pRouteStatus')
-        .textContent =
-        'Routeberekening is niet gekoppeld.';
-
-    }
-
-    return;
-  }
-
-  if(
-    $('#routeStatus')
-  ){
-
-    $('#routeStatus')
-      .textContent =
-      'Vul beide adressen in om de route te berekenen.';
-
-  }
-
-  if(
-    $('#pRouteStatus')
-  ){
-
-    $('#pRouteStatus')
-      .textContent =
-      'Vul beide adressen in om de route te berekenen.';
-
-  }
-
-}
-
-
-/* =========================================
-   ORDER OPSLAAN
-========================================= */
 
 async function createOrder(
   payload
 ){
+  payload.customer_token =
+    payload.customer_token ||
+    uid();
 
-  if(
-    !payload.customer_token
-  ){
-
-    payload.customer_token =
-      crypto.randomUUID();
-
-  }
+  /*
+    Zonder Supabase blijft de order
+    lokaal beschikbaar.
+  */
 
   if(!supa){
+    payload.backend_cancel_supported =
+      false;
 
     saveLocal(
       payload
     );
 
-    return {
-      data:
-        payload,
-
-      local:
-        true
-    };
-
+    return payload;
   }
 
-  const {
-    error
-  } =
+  /*
+    Eerst proberen we met de beveiligde
+    annuleringsvelden.
+  */
+
+  let result =
     await supa
       .from('orders')
-      .insert({
+      .insert(
+        buildDatabaseRow(
+          payload,
+          true
+        )
+      );
 
-        order_number:
-          payload.order_number,
+  /*
+    Als customer_token/cancellation_fee
+    nog niet in Supabase bestaan,
+    proberen we automatisch opnieuw
+    zonder die velden.
 
-        pickup:
-          payload.pickup,
+    Daardoor blijft boeken gewoon werken.
+  */
 
-        dropoff:
-          payload.dropoff,
-
-        distance_km:
-          payload.distance_km,
-
-        duration_minutes:
-          payload.duration_minutes,
-
-        price:
-          payload.price,
-
-        status:
-          payload.status,
-
-        parcel_type:
-          payload.parcel_type || '',
-
-        parcel_description:
-          payload.parcel_description || '',
-
-        weight_kg:
-          payload.weight_kg || null,
-
-        length_cm:
-          payload.length_cm || null,
-
-        width_cm:
-          payload.width_cm || null,
-
-        height_cm:
-          payload.height_cm || null,
-
-        customer_name:
-          payload.customer_name || '',
-
-        customer_phone:
-          payload.customer_phone || '',
-
-        customer_email:
-          payload.customer_email || '',
-
-        when:
-          payload.when || '',
-
-        customer_token:
-          payload.customer_token,
-
-        cancellation_fee:
-          0
-
-      });
-
-  if(error){
-
-    console.error(
-      'Supabase order opslaan mislukt:',
-      error
+  if(
+    result.error &&
+    missingOptionalCancellationColumn(
+      result.error
+    )
+  ){
+    console.warn(
+      'Annuleringskolommen ontbreken. Order wordt zonder deze velden opgeslagen.'
     );
 
-    throw error;
+    result =
+      await supa
+        .from('orders')
+        .insert(
+          buildDatabaseRow(
+            payload,
+            false
+          )
+        );
 
+    payload.backend_cancel_supported =
+      false;
+  }else{
+    payload.backend_cancel_supported =
+      !result.error;
+  }
+
+  if(result.error){
+    console.error(
+      'SUPABASE OPSLAAN FOUT:',
+      result.error
+    );
+
+    throw result.error;
   }
 
   saveLocal(
@@ -1758,25 +1607,24 @@ async function createOrder(
 }
 
 
-/* =========================================
+/* =========================================================
    DIRECTE ORDER
-========================================= */
+========================================================= */
 
-const bookingForm =
-  $('#bookingForm');
+function initDirectBooking(){
+  const form =
+    $('#bookingForm');
 
-if(bookingForm){
+  if(!form){
+    return;
+  }
 
-  bookingForm.addEventListener(
+  form.addEventListener(
     'submit',
-    async e => {
+    async event => {
+      event.preventDefault();
 
-      e.preventDefault();
-
-      if(
-        !directRoute.km
-      ){
-
+      if(!directRoute.km){
         toast(
           'Bereken eerst de route door beide adressen in te vullen.'
         );
@@ -1784,40 +1632,50 @@ if(bookingForm){
         return;
       }
 
-      const surcharge =
-        !!$('#afterHours')
-          ?.checked;
+      const parcel =
+        $('#parcelType')?.value ||
+        '';
 
-      const parcelTypeValue =
-        $('#parcelType')
-          ?.value || '';
+      if(
+        parcel.toLowerCase() === 'overige' &&
+        !$('#parcelDescription')
+          ?.value
+          ?.trim()
+      ){
+        toast(
+          'Omschrijf bij Overige wat de zending is.'
+        );
+
+        return;
+      }
+
+      const surcharge =
+        !!$('#afterHours')?.checked;
 
       const payload = {
-
         id:
-          crypto.randomUUID(),
+          uid(),
 
         order_number:
           orderNo(),
 
         customer_token:
-          crypto.randomUUID(),
+          uid(),
 
         pickup:
-          $('#pickup')
-            ?.value || '',
+          $('#pickup')?.value?.trim() ||
+          '',
 
         dropoff:
-          $('#dropoff')
-            ?.value || '',
+          $('#dropoff')?.value?.trim() ||
+          '',
 
         distance_km:
           directRoute.km,
 
         duration_minutes:
           Math.round(
-            directRoute.seconds /
-            60
+            directRoute.seconds / 60
           ),
 
         price:
@@ -1834,61 +1692,61 @@ if(bookingForm){
 
         weight_kg:
           Number(
-            $('#weight')
-              ?.value || 0
+            $('#weight')?.value || 0
           ),
 
         length_cm:
           Number(
-            $('#lengthCm')
-              ?.value || 0
+            $('#lengthCm')?.value || 0
           ),
 
         width_cm:
           Number(
-            $('#widthCm')
-              ?.value || 0
+            $('#widthCm')?.value || 0
           ),
 
         height_cm:
           Number(
-            $('#heightCm')
-              ?.value || 0
+            $('#heightCm')?.value || 0
           ),
 
         parcel_type:
-          parcelTypeValue,
+          parcel,
 
         parcel_description:
-          parcelTypeValue
-            .trim()
-            .toLowerCase() ===
+          parcel.toLowerCase() ===
           'overige'
-          ? (
-              $('#parcelDescription')
-                ?.value || ''
-            )
-          : '',
+            ? (
+                $('#parcelDescription')
+                  ?.value
+                  ?.trim() ||
+                ''
+              )
+            : '',
 
         customer_name:
           $('#customerName')
-            ?.value || '',
+            ?.value
+            ?.trim() ||
+          '',
 
         customer_phone:
           $('#customerPhone')
-            ?.value || '',
+            ?.value
+            ?.trim() ||
+          '',
 
         customer_email:
           $('#customerEmail')
-            ?.value || '',
+            ?.value
+            ?.trim() ||
+          '',
 
         cancellation_fee:
           0
-
       };
 
       try{
-
         await createOrder(
           payload
         );
@@ -1901,41 +1759,41 @@ if(bookingForm){
           'shipments'
         );
 
-      }catch(err){
+      }catch(error){
+        console.error(error);
 
-        console.error(err);
-
-        toast(
-          'Zending kon niet worden opgeslagen.'
+        alert(
+          'Zending kon niet worden opgeslagen.\n\n' +
+          (
+            error?.message ||
+            error?.details ||
+            'Onbekende databasefout'
+          )
         );
-
       }
-
     }
   );
-
 }
 
 
-/* =========================================
+/* =========================================================
    GEPLANDE ORDER
-========================================= */
+========================================================= */
 
-const plannedForm =
-  $('#plannedForm');
+function initPlannedBooking(){
+  const form =
+    $('#plannedForm');
 
-if(plannedForm){
+  if(!form){
+    return;
+  }
 
-  plannedForm.addEventListener(
+  form.addEventListener(
     'submit',
-    async e => {
+    async event => {
+      event.preventDefault();
 
-      e.preventDefault();
-
-      if(
-        !plannedRoute.km
-      ){
-
+      if(!plannedRoute.km){
         toast(
           'Bereken eerst de route door beide adressen in te vullen.'
         );
@@ -1943,121 +1801,129 @@ if(plannedForm){
         return;
       }
 
-      const d =
-        $('#pDate')
-          ?.value || '';
+      const date =
+        $('#pDate')?.value ||
+        '';
 
-      const t =
-        $('#pTime')
-          ?.value || '';
+      const time =
+        $('#pTime')?.value ||
+        '';
 
-      const surcharge =
-        plannedSurcharge(
-          d,
-          t
+      const parcel =
+        $('#pParcelType')?.value ||
+        '';
+
+      if(
+        parcel.toLowerCase() === 'overige' &&
+        !$('#pParcelDescription')
+          ?.value
+          ?.trim()
+      ){
+        toast(
+          'Omschrijf bij Overige wat de zending is.'
         );
 
-      const parcelTypeValue =
-        $('#pParcelType')
-          ?.value || '';
+        return;
+      }
 
       const payload = {
-
         id:
-          crypto.randomUUID(),
+          uid(),
 
         order_number:
           orderNo(),
 
         customer_token:
-          crypto.randomUUID(),
+          uid(),
 
         pickup:
-          $('#pPickup')
-            ?.value || '',
+          $('#pPickup')?.value?.trim() ||
+          '',
 
         dropoff:
-          $('#pDropoff')
-            ?.value || '',
+          $('#pDropoff')?.value?.trim() ||
+          '',
 
         distance_km:
           plannedRoute.km,
 
         duration_minutes:
           Math.round(
-            plannedRoute.seconds /
-            60
+            plannedRoute.seconds / 60
           ),
 
         price:
           calc(
             plannedRoute.km,
-            surcharge
+            plannedSurcharge(
+              date,
+              time
+            )
           ),
 
         status:
           'Gepland',
 
         when:
-          `${d} ${t}`,
+          `${date} ${time}`,
 
         weight_kg:
           Number(
-            $('#pWeight')
-              ?.value || 0
+            $('#pWeight')?.value || 0
           ),
 
         length_cm:
           Number(
-            $('#pLengthCm')
-              ?.value || 0
+            $('#pLengthCm')?.value || 0
           ),
 
         width_cm:
           Number(
-            $('#pWidthCm')
-              ?.value || 0
+            $('#pWidthCm')?.value || 0
           ),
 
         height_cm:
           Number(
-            $('#pHeightCm')
-              ?.value || 0
+            $('#pHeightCm')?.value || 0
           ),
 
         parcel_type:
-          parcelTypeValue,
+          parcel,
 
         parcel_description:
-          parcelTypeValue
-            .trim()
-            .toLowerCase() ===
+          parcel.toLowerCase() ===
           'overige'
-          ? (
-              $('#pParcelDescription')
-                ?.value || ''
-            )
-          : '',
+            ? (
+                $('#pParcelDescription')
+                  ?.value
+                  ?.trim() ||
+                ''
+              )
+            : '',
 
         customer_name:
           $('#pCustomerName')
-            ?.value || '',
+            ?.value
+            ?.trim() ||
+          '',
 
         customer_phone:
           $('#pCustomerPhone')
-            ?.value || '',
+            ?.value
+            ?.trim() ||
+          '',
 
         customer_email:
           $('#pCustomerEmail')
-            ?.value || '',
+            ?.value
+            ?.trim() ||
+          '',
 
         cancellation_fee:
           0
-
       };
 
       try{
-
         await createOrder(
           payload
         );
@@ -2070,246 +1936,174 @@ if(plannedForm){
           'shipments'
         );
 
-      }catch(err){
+      }catch(error){
+        console.error(error);
 
-        console.error(err);
-
-        toast(
-          'Zending kon niet worden opgeslagen.'
+        alert(
+          'Zending kon niet worden opgeslagen.\n\n' +
+          (
+            error?.message ||
+            error?.details ||
+            'Onbekende databasefout'
+          )
         );
-
       }
-
     }
   );
-
 }
 
 
-/* =========================================
-   ADMIN STATE
-========================================= */
+/* =========================================================
+   ADMIN
+========================================================= */
 
 async function refreshAdminState(){
+  const loggedOut =
+    $('#adminLoggedOut');
+
+  const loggedIn =
+    $('#adminLoggedIn');
 
   if(!supa){
+    loggedOut?.classList.remove(
+      'hidden'
+    );
 
-    const out =
-      $('#adminLoggedOut');
-
-    const inn =
-      $('#adminLoggedIn');
-
-    if(out){
-
-      out.classList.remove(
-        'hidden'
-      );
-
-    }
-
-    if(inn){
-
-      inn.classList.add(
-        'hidden'
-      );
-
-    }
+    loggedIn?.classList.add(
+      'hidden'
+    );
 
     return;
   }
 
   const {
-    data:{
-      session
-    }
+    data
   } =
-    await supa
-      .auth
-      .getSession();
+    await supa.auth.getSession();
 
-  const out =
-    $('#adminLoggedOut');
-
-  const inn =
-    $('#adminLoggedIn');
+  const session =
+    data?.session;
 
   if(!session){
+    loggedOut?.classList.remove(
+      'hidden'
+    );
 
-    if(out){
-
-      out.classList.remove(
-        'hidden'
-      );
-
-    }
-
-    if(inn){
-
-      inn.classList.add(
-        'hidden'
-      );
-
-    }
+    loggedIn?.classList.add(
+      'hidden'
+    );
 
     return;
   }
 
-  if(out){
+  loggedOut?.classList.add(
+    'hidden'
+  );
 
-    out.classList.add(
-      'hidden'
-    );
-
-  }
-
-  if(inn){
-
-    inn.classList.remove(
-      'hidden'
-    );
-
-  }
+  loggedIn?.classList.remove(
+    'hidden'
+  );
 
   const identity =
     $('#adminIdentity');
 
   if(identity){
-
     identity.textContent =
       session.user?.email ||
       '';
-
   }
 
-  loadAdminOrders();
+  await loadAdminOrders();
 }
 
+function initAdminLogin(){
+  const form =
+    $('#adminLoginForm');
 
-/* =========================================
-   ADMIN LOGIN
-========================================= */
+  if(form){
+    form.addEventListener(
+      'submit',
+      async event => {
+        event.preventDefault();
 
-const adminLoginForm =
-  $('#adminLoginForm');
+        if(!supa){
+          toast(
+            'Supabase is niet verbonden.'
+          );
 
-if(adminLoginForm){
+          return;
+        }
 
-  adminLoginForm.addEventListener(
-    'submit',
-    async e => {
+        const email =
+          $('#adminEmail')
+            ?.value
+            ?.trim() ||
+          '';
 
-      e.preventDefault();
+        const password =
+          $('#adminPassword')
+            ?.value ||
+          '';
 
-      if(!supa){
-
-        toast(
-          'Supabase is niet verbonden.'
-        );
-
-        return;
-      }
-
-      const email =
-        $('#adminEmail')
-          ?.value ||
-        adminLoginForm
-          .querySelector(
-            '[type="email"]'
-          )
-          ?.value ||
-        '';
-
-      const password =
-        $('#adminPassword')
-          ?.value ||
-        adminLoginForm
-          .querySelector(
-            '[type="password"]'
-          )
-          ?.value ||
-        '';
-
-      const {
-        error
-      } =
-        await supa
-          .auth
-          .signInWithPassword({
-            email,
-            password
-          });
-
-      if(error){
-
-        console.error(
+        const {
           error
-        );
+        } =
+          await supa.auth
+            .signInWithPassword({
+              email,
+              password
+            });
+
+        if(error){
+          console.error(error);
+
+          toast(
+            'Inloggen mislukt.'
+          );
+
+          return;
+        }
 
         toast(
-          'Inloggen mislukt.'
+          'Ingelogd.'
         );
 
-        return;
+        await refreshAdminState();
       }
+    );
+  }
 
-      toast(
-        'Ingelogd.'
-      );
+  const logout =
+    $('#adminLogout');
 
-      refreshAdminState();
+  if(logout){
+    logout.addEventListener(
+      'click',
+      async () => {
+        if(supa){
+          await supa.auth.signOut();
+        }
 
-    }
-  );
-
-}
-
-
-/* =========================================
-   ADMIN LOGOUT
-========================================= */
-
-const adminLogout =
-  $('#adminLogout');
-
-if(adminLogout){
-
-  adminLogout.addEventListener(
-    'click',
-    async () => {
-
-      if(supa){
-
-        await supa
-          .auth
-          .signOut();
-
+        await refreshAdminState();
       }
-
-      refreshAdminState();
-
-    }
-  );
-
+    );
+  }
 }
-
-
-/* =========================================
-   ADMIN ORDERS
-========================================= */
 
 async function loadAdminOrders(){
-
   if(!supa){
     return;
   }
 
-  const adminList =
+  const list =
     $('#adminList');
 
-  if(!adminList){
+  if(!list){
     return;
   }
+
+  list.innerHTML =
+    '<p>Orders laden...</p>';
 
   const {
     data,
@@ -2321,159 +2115,161 @@ async function loadAdminOrders(){
       .order(
         'created_at',
         {
-          ascending:
-            false
+          ascending: false
         }
       );
 
   if(error){
-
     console.error(
+      'Orders laden mislukt:',
       error
     );
 
-    adminList.innerHTML =
+    list.innerHTML =
       '<p>Orders konden niet worden geladen.</p>';
 
     return;
   }
 
-  adminList.innerHTML =
+  list.innerHTML =
     data?.length
-    ? data
-        .map(
-          s =>
-            shipmentCard(
-              s,
-              true
-            )
-        )
-        .join('')
-    : '<p>Nog geen orders.</p>';
+      ? data
+          .map(
+            shipment =>
+              shipmentCard(
+                shipment,
+                true
+              )
+          )
+          .join('')
+      : '<p>Nog geen orders.</p>';
 
-  $$('.update-status')
-    .forEach(
-      sel => {
+  $$('.update-status').forEach(
+    select => {
+      select.addEventListener(
+        'change',
+        async () => {
+          const orderNumber =
+            select.dataset.order;
 
-        sel.addEventListener(
-          'change',
-          async () => {
+          const status =
+            select.value;
 
-            const id =
-              sel.dataset.order;
-
-            const status =
-              sel.value;
-
-            const {
-              error
-            } =
-              await supa
-                .from('orders')
-                .update({
-                  status
-                })
-                .eq(
-                  'order_number',
-                  id
-                );
-
-            if(error){
-
-              console.error(
-                'Status bijwerken mislukt:',
-                error
-              );
-
-              toast(
-                'Status kon niet worden bijgewerkt.'
-              );
-
-              return;
-            }
-
-            updateLocalShipment(
-              id,
-              {
+          const {
+            error
+          } =
+            await supa
+              .from('orders')
+              .update({
                 status
-              }
+              })
+              .eq(
+                'order_number',
+                orderNumber
+              );
+
+          if(error){
+            console.error(
+              error
             );
 
             toast(
-              'Status bijgewerkt.'
+              'Status kon niet worden bijgewerkt.'
             );
 
+            return;
           }
-        );
 
-      }
-    );
+          updateLocalShipment(
+            orderNumber,
+            {
+              status
+            }
+          );
 
+          toast(
+            'Status bijgewerkt.'
+          );
+        }
+      );
+    }
+  );
 }
 
 
-/* =========================================
+/* =========================================================
    BEGROETING
-========================================= */
+========================================================= */
 
-const hr =
-  new Date()
-    .getHours();
+function setGreeting(){
+  const greeting =
+    $('#greeting');
 
-const greeting =
-  $('#greeting');
+  if(!greeting){
+    return;
+  }
 
-if(greeting){
+  const hour =
+    new Date().getHours();
 
   greeting.textContent =
-    hr < 12
-    ? 'Goedemorgen,'
-    : hr < 18
-    ? 'Goedemiddag,'
-    : 'Goedenavond,';
-
+    hour < 12
+      ? 'Goedemorgen,'
+      : hour < 18
+      ? 'Goedemiddag,'
+      : 'Goedenavond,';
 }
 
 
-/* =========================================
-   START
-========================================= */
+/* =========================================================
+   START APP
+========================================================= */
 
-initSupabase();
-loadMaps();
-render();
+function startApp(){
+  initSupabase();
 
-toggleParcelDescription('');
-toggleParcelDescription('p');
+  initNavigation();
+
+  initParcelFields();
+
+  initRouteInputs();
+
+  initRouteStatus();
+
+  initDirectBooking();
+
+  initPlannedBooking();
+
+  initAdminLogin();
+
+  setGreeting();
+
+  render();
+}
+
+startApp();
 
 
-/* =========================================
+/* =========================================================
    SERVICE WORKER
-========================================= */
+========================================================= */
 
 if(
-  'serviceWorker'
-  in navigator
+  'serviceWorker' in navigator
 ){
-
   window.addEventListener(
     'load',
     () => {
-
-      navigator
-        .serviceWorker
-        .register(
-          './sw.js'
-        )
+      navigator.serviceWorker
+        .register('./sw.js')
         .catch(
-          err =>
+          error => {
             console.warn(
               'Service worker:',
-              err
-            )
+              error
+            );
+          }
         );
-
     }
   );
-
-    
+    }
