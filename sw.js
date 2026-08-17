@@ -1,4 +1,59 @@
-const C='vr-spoed-v2';const A=['./','./index.html','./styles.css','./app.js','./config.js','./manifest.webmanifest','./icon.svg'];
-self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(C).then(c=>c.addAll(A)))});
-self.addEventListener('activate',e=>e.waitUntil(Promise.all([clients.claim(),caches.keys().then(k=>Promise.all(k.filter(x=>x!==C).map(x=>caches.delete(x))))])));
-self.addEventListener('fetch',e=>e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request))));
+const CACHE = 'vr-spoed-v3';
+
+const ASSETS = [
+  './',
+  './index.html',
+  './styles.css',
+  './app.js',
+  './config.js',
+  './manifest.webmanifest',
+  './icon.svg'
+];
+
+self.addEventListener('install', event => {
+  self.skipWaiting();
+
+  event.waitUntil(
+    caches.open(CACHE).then(cache => {
+      return cache.addAll(ASSETS);
+    })
+  );
+});
+
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    Promise.all([
+      clients.claim(),
+
+      caches.keys().then(keys => {
+        return Promise.all(
+          keys
+            .filter(key => key !== CACHE)
+            .map(key => caches.delete(key))
+        );
+      })
+    ])
+  );
+});
+
+self.addEventListener('fetch', event => {
+  if(event.request.method !== 'GET'){
+    return;
+  }
+
+  event.respondWith(
+    fetch(event.request)
+      .then(response => {
+        const copy = response.clone();
+
+        caches.open(CACHE).then(cache => {
+          cache.put(event.request, copy);
+        });
+
+        return response;
+      })
+      .catch(() => {
+        return caches.match(event.request);
+      })
+  );
+});
