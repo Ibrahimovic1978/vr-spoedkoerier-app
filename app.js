@@ -67,109 +67,98 @@ function plannedSurcharge(d,t){
   return hour>=17||hour<8||dow===0||dow===6;
 }
 
-async function calculateRoute(origin,destination,prefix=''){
-  if(!origin||!destination)return;
-  const stat=$(prefix?'#pRouteStatus':'#routeStatus');
-  if(!googleLoaded){stat.textContent='Google Maps is nog niet gekoppeld. Vul de API-key in config.js.';return}
-  stat.textContent='Route wordt berekend…';
-  const service=new google.maps.DirectionsService();
-  service.route({origin,destination,travelMode:google.maps.TravelMode.DRIVING},(res,status)=>{
-    if(status==='OK'&&res.routes?.[0]?.legs?.[0]){
-      const leg=res.routes[0].legs[0];
-      const route={km:leg.distance.value/1000,seconds:leg.duration.value};
-      if(prefix)plannedRoute=route;else directRoute=route;
-      setRouteUI(prefix,route);
-    }else{stat.textContent='Route kon niet worden berekend. Kies een adres uit de suggesties.'}
-  });
-}
-function debounce(fn,ms=650){let t;return(...args)=>{clearTimeout(t);t=setTimeout(()=>fn(...args),ms)}}
-const routeDirectDeb=debounce(()=>calculateRoute($('#pickup').value,$('#dropoff').value,''),700);
-const routePlannedDeb=debounce(()=>calculateRoute($('#pPickup').value,$('#pDropoff').value,'p'),700);
-['pickup','dropoff'].forEach(id=>$('#'+id).addEventListener('change',routeDirectDeb));
-['pPickup','pDropoff'].forEach(id=>$('#'+id).addEventListener('change',routePlannedDeb));
-$('#afterHours').addEventListener('change',()=>setRouteUI('',directRoute));
-$('#pDate').addEventListener('change',()=>setRouteUI('p',plannedRoute));$('#pTime').addEventListener('change',()=>setRouteUI('p',plannedRoute));
+9
 
-window.initVRMaps=()=>{
-  googleLoaded=true;
-  const opts={componentRestrictions:{country:['nl','be']},fields:['formatted_address','geometry','name']};
-  [['pickup','dropoff'],['pPickup','pDropoff']].flat().forEach(id=>{
-    const el=$('#'+id);const ac=new google.maps.places.Autocomplete(el,opts);
-    ac.addListener('place_changed',()=>{const p=ac.getPlace();if(p?.formatted_address)el.value=p.formatted_address;id.startsWith('p')?routePlannedDeb():routeDirectDeb()});
-  });
-  $('#routeStatus').textContent='Vul beide adressen in. De route wordt automatisch berekend.';
-  $('#pRouteStatus').textContent='Vul beide adressen in. De route wordt automatisch berekend.';
-};
-function loadMaps(){
-  if(!hasMaps()){
-    $('#routeStatus').textContent='Automatische kilometers zijn klaar, maar Google Maps moet nog gekoppeld worden.';
-    $('#pRouteStatus').textContent='Automatische kilometers zijn klaar, maar Google Maps moet nog gekoppeld worden.';
+async async function orsGeocode(address){
+  const url =
+    'https://api.heigit.org/geocode/search' +
+    '?api_key=' + encodeURIComponent(CFG.ORS_API_KEY) +
+    '&text=' + encodeURIComponent(address) +
+    '&boundary.country=NLD' +
+    '&size=1';
+
+  const res = await fetch(url);
+
+  if(!res.ok){
+    throw new Error('Adres zoeken mislukt');
+  }
+
+  const data = await res.json();
+
+  if(!data.features || !data.features.length){
+    throw new Error('Adres niet gevonden');
+  }
+
+  const coords = data.features[0].geometry.coordinates;
+
+  return {
+    lng: coords[0],
+    lat: coords[1]
+  };
+}
+
+async function calculateRoute(origin,destination,prefix=''){
+  if(!origin || !destination) return;
+
+  const stat = $(prefix ? '#pRouteStatus' : '#routeStatus');
+
+  if(!CFG.ORS_API_KEY){
+    stat.textContent = 'OpenRouteService is niet gekoppeld.';
     return;
   }
-  const s=document.createElement('script');
-  s.src=`https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(CFG.GOOGLE_MAPS_API_KEY)}&libraries=places&callback=initVRMaps`;
-  s.async=true;s.defer=true;document.head.appendChild(s);
+
+  stat.textContent = 'Route wordt berekend...';
+
+  try{
+    const from = await orsGeocode(origin);
+    const to = await orsGeocode(destination);
+
+    const url =
+      'https://api.heigit.org/v2/directions/driving-car' +
+      '?api_key=' + encodeURIComponent(CFG.ORS_API_KEY) +
+      '&start=' + from.lng + ',' + from.lat +
+      '&end=' + to.lng + ',' + to.lat;
+
+    const res = await fetch(url);
+
+    if(!res.ok){
+      throw new Error('Routeberekening mislukt');
+    }
+
+    const data = await res.json();
+
+    if(!data.features || !data.features.length){
+      throw new Error('Geen route gevonden');
+    }
+
+    const summary = data.features[0].properties.summary;
+
+    const route = {
+      km: summary.distance / 1000,
+      seconds: summary.duration
+    };
+
+    if(prefix){
+      plannedRoute = route;
+    }else{
+      directRoute = route;
+    }
+
+    setRouteUI(prefix,route);
+
+  }catch(err){
+    console.error(err);
+    stat.textContent = err.message || 'Route kon niet worden berekend';
+  }
 }
 
-async function createOrder(payload){
-  saveLocal(payload);
-  if(!supa)return {data:payload,local:true};
-  const {data,error}=await supa.from('orders').insert({
-    order_number:payload.order_number,
-    pickup:payload.pickup,dropoff:payload.dropoff,
-    distance_km:payload.distance_km,duration_seconds:payload.duration_seconds,
-    price:payload.price,status:payload.status,order_type:payload.order_type,
-    parcel_type:payload.parcel_type||null,weight_kg:payload.weight_kg||null,
-    customer_name:payload.customer_name,customer_phone:payload.customer_phone,
-    customer_email:payload.customer_email,pickup_time:payload.when
-  }).select().single();
-  if(error)throw error;
-  const merged={...payload,id:data.id};saveLocal(merged);return {data:merged,local:false};
-}
+function loadMaps(){
+  if(!CFG.ORS_API_KEY){
+    $('#routeStatus').textContent = 'OpenRouteService is niet gekoppeld.';
+    $('#pRouteStatus').textContent = 'OpenRouteService is niet gekoppeld.';
+    return;
+  }
 
-$('#bookingForm').addEventListener('submit',async e=>{
-  e.preventDefault();
-  if(!directRoute.km){toast('Bereken eerst de route door beide adressen te kiezen.');return}
-  const payload={id:crypto.randomUUID?.()||Date.now(),order_number:orderNo(),pickup:$('#pickup').value,dropoff:$('#dropoff').value,
-    distance_km:directRoute.km,duration_seconds:directRoute.seconds,price:calc(directRoute.km,$('#afterHours').checked),
-    status:'Aangevraagd',when:'Vandaag',order_type:'direct',parcel_type:$('#parcelType').value,weight_kg:Number($('#weight').value||0),
-    customer_name:$('#customerName').value,customer_phone:$('#customerPhone').value,customer_email:$('#customerEmail').value};
-  try{const r=await createOrder(payload);toast(r.local?'Zending lokaal opgeslagen. Koppel Supabase om hem centraal binnen te krijgen.':`Aanvraag ${payload.order_number} is verzonden.`);e.target.reset();directRoute={km:null,seconds:null};$('#routeBox').classList.add('hidden');$('#price').textContent='Route eerst berekenen';show('shipments')}
-  catch(err){console.error(err);toast('Centrale opslag gaf een fout. De aanvraag is lokaal bewaard.');show('shipments')}
-});
-$('#plannedForm').addEventListener('submit',async e=>{
-  e.preventDefault();if(!plannedRoute.km){toast('Bereken eerst de route door beide adressen te kiezen.');return}
-  const d=$('#pDate').value,t=$('#pTime').value,sur=plannedSurcharge(d,t);
-  const payload={id:crypto.randomUUID?.()||Date.now(),order_number:orderNo(),pickup:$('#pPickup').value,dropoff:$('#pDropoff').value,
-    distance_km:plannedRoute.km,duration_seconds:plannedRoute.seconds,price:calc(plannedRoute.km,sur),
-    status:'Gepland',when:`${d} ${t}`,order_type:'planned',customer_name:$('#pCustomerName').value,customer_phone:$('#pCustomerPhone').value,customer_email:$('#pCustomerEmail').value};
-  try{const r=await createOrder(payload);toast(r.local?'Zending lokaal opgeslagen. Koppel Supabase voor centrale ontvangst.':`Zending ${payload.order_number} is gepland.`);e.target.reset();plannedRoute={km:null,seconds:null};$('#pRouteBox').classList.add('hidden');$('#pPrice').textContent='Route eerst berekenen';show('shipments')}
-  catch(err){console.error(err);toast('Centrale opslag gaf een fout. De aanvraag is lokaal bewaard.');show('shipments')}
-});
-
-async function refreshAdminState(){
-  if(!supa){$('#adminLoggedOut').classList.remove('hidden');$('#adminLoggedIn').classList.add('hidden');return}
-  const {data:{session}}=await supa.auth.getSession();
-  if(!session){$('#adminLoggedOut').classList.remove('hidden');$('#adminLoggedIn').classList.add('hidden');return}
-  $('#adminLoggedOut').classList.add('hidden');$('#adminLoggedIn').classList.remove('hidden');$('#adminIdentity').textContent=session.user.email;await loadAdminOrders();
+  $('#routeStatus').textContent = 'Vul beide adressen in.';
+  $('#pRouteStatus').textContent = 'Vul beide adressen in.';
 }
-$('#adminLoginForm').addEventListener('submit',async e=>{
-  e.preventDefault();if(!supa){toast('Supabase is nog niet gekoppeld.');return}
-  const {error}=await supa.auth.signInWithPassword({email:$('#adminEmail').value,password:$('#adminPassword').value});
-  if(error){toast('Inloggen mislukt.');return}toast('Ingelogd.');refreshAdminState();
-});
-$('#adminLogout').addEventListener('click',async()=>{if(supa)await supa.auth.signOut();refreshAdminState()});
-async function loadAdminOrders(){
-  const {data,error}=await supa.from('orders').select('*').order('created_at',{ascending:false}).limit(100);
-  if(error){$('#adminList').innerHTML='<div class="shipment">Orders konden niet worden geladen.</div>';return}
-  $('#adminList').innerHTML=data.length?data.map(x=>shipmentCard(x,true)).join(''):'<div class="shipment">Nog geen centrale aanvragen.</div>';
-  $$('.update-status').forEach(btn=>btn.addEventListener('click',async()=>{
-    const id=btn.dataset.order,sel=document.querySelector(`.status-select[data-order="${id}"]`);
-    const {error}=await supa.from('orders').update({status:sel.value}).eq('id',id);
-    toast(error?'Status kon niet worden opgeslagen.':'Status bijgewerkt.');if(!error)loadAdminOrders();
-  }));
-}
-
-const hr=new Date().getHours();$('#greeting').textContent=(hr<12?'Goedemorgen,':hr<18?'Goedemiddag,':'Goedenavond,');
-initSupabase();loadMaps();render();
-if('serviceWorker'in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}))}
