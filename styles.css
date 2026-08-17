@@ -88,3 +88,70 @@ button,input,select{font:inherit}.screen,.page{display:none}.active{display:bloc
     grid-template-columns:1fr;
   }
   }
+/* ===== AFMETINGEN ===== */
+
+.three{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+  width:100%;
+}
+
+.three label{
+  min-width:0;
+}
+
+.three input{
+  width:100%;
+  min-width:0;
+}
+
+
+/* ===== OMSCHRIJVING OVERIGE ===== */
+
+#parcelDescriptionBox,
+#pParcelDescriptionBox{
+  width:100%;
+  margin-top:14px;
+}
+
+#parcelDescriptionBox label,
+#pParcelDescriptionBox label{
+  display:block;
+  width:100%;
+}
+
+#parcelDescription,
+#pParcelDescription{
+  display:block;
+  width:100%;
+  min-height:110px;
+  margin-top:10px;
+  padding:18px 20px;
+  border:1px solid #ddd;
+  border-radius:20px;
+  background:#fff;
+  color:#101010;
+  font:inherit;
+  font-size:16px;
+  line-height:1.4;
+  resize:vertical;
+  outline:none;
+}
+
+#parcelDescription:focus,
+#pParcelDescription:focus{
+  border-color:#d7aa00;
+  box-shadow:0 0 0 4px rgba(255,196,0,.15);
+}
+
+#parcelDescriptionBox.hidden,
+#pParcelDescriptionBox.hidden{
+  display:none;
+}
+
+@media(max-width:380px){
+  .three{
+    grid-template-columns:1fr;
+  }
+}
