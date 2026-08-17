@@ -22,3 +22,69 @@ button,input,select{font:inherit}.screen,.page{display:none}.active{display:bloc
 .backend-badge{font-size:12px;padding:12px 14px;border-radius:12px;background:#eee;color:#555}.backend-badge.ok{background:#e8f5ed;color:var(--ok)}.backend-badge.warn{background:#fff3d9;color:var(--warn)}
 .admin-head{display:flex;justify-content:space-between;align-items:center;margin:14px 0}.small-btn{width:auto;margin:0;padding:10px 14px}.admin-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.admin-actions select,.admin-actions button{margin:0}
 @media(min-width:600px){body{padding:28px 0}#app{min-height:calc(100vh - 56px);border-radius:28px;box-shadow:0 20px 60px #999}.welcome{min-height:calc(100vh - 56px)}#shell{min-height:calc(100vh - 56px)}}
+/* ===== AFMETINGEN ZENDING ===== */
+
+.dimensions-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+  margin-top:10px;
+}
+
+.dimensions-grid label{
+  display:block;
+  font-size:14px;
+  font-weight:700;
+  margin-bottom:6px;
+}
+
+.dimensions-grid input{
+  width:100%;
+  min-width:0;
+  padding:16px 10px;
+  border:1px solid #ddd;
+  border-radius:14px;
+  background:#fff;
+  font-size:16px;
+  outline:none;
+}
+
+.dimensions-grid input:focus{
+  border-color:#101010;
+}
+
+/* ===== OMSCHRIJVING BIJ OVERIGE ===== */
+
+.parcel-description{
+  margin-top:14px;
+}
+
+.parcel-description textarea{
+  width:100%;
+  min-height:110px;
+  padding:16px;
+  border:1px solid #ddd;
+  border-radius:18px;
+  background:#fff;
+  font:inherit;
+  font-size:16px;
+  resize:vertical;
+  outline:none;
+}
+
+.parcel-description textarea:focus{
+  border-color:#101010;
+}
+
+/* standaard verborgen */
+.parcel-description.hidden{
+  display:none;
+}
+
+/* ===== MOBIEL ===== */
+
+@media(max-width:380px){
+  .dimensions-grid{
+    grid-template-columns:1fr;
+  }
+  }
